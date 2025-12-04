@@ -19,14 +19,22 @@ const imagesPath = isProd
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+import pgSession from "connect-pg-simple";
+import { pool } from "./db";
+
 app.use(session({
-  secret: "Guthier2024!_SESSION_SECRET_@2024", // à changer pour production
+  store: new (pgSession(session))({
+    pool,
+    createTableIfMissing: true,
+  }),
+  secret: process.env.SESSION_SECRET || "Guthier2024!_SESSION_SECRET_@2024",
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: false, // mettre true si HTTPS
-    maxAge: 1000 * 60 * 60 * 2 // 2h
+    secure: app.get("env") === "production",
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+    sameSite: "lax",
   }
 }));
 
@@ -71,17 +79,17 @@ app.use("/assets", (req, res, next) => {
 app.use((req, res, next) => {
   // Compression
   res.setHeader("Vary", "Accept-Encoding");
-  
+
   // Preload hints pour les ressources critiques
   if (req.path === "/") {
     res.setHeader("Link", '</generated-icon.png>; rel=preload; as=image, </assets/index.css>; rel=preload; as=style, </assets/index.js>; rel=preload; as=script');
   }
-  
+
   // Headers de sécurité supplémentaires
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  
+
   next();
 });
 

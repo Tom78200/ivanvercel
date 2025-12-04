@@ -13,7 +13,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  
+
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
     return;
@@ -43,7 +43,14 @@ app.use(helmet({
 
 // ATTENTION: en serverless, la mémoire n'est pas persistée entre invocations.
 // Pour l'admin, on garde une session simple basée cookie pour rester compatible.
+import pgSession from "connect-pg-simple";
+import { pool } from "../server/db";
+
 app.use(session({
+  store: new (pgSession(session))({
+    pool,
+    createTableIfMissing: true,
+  }),
   secret: process.env.SESSION_SECRET || "Guthier2024!_SESSION_SECRET_@2024",
   resave: false,
   saveUninitialized: false,
@@ -51,7 +58,7 @@ app.use(session({
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 1000 * 60 * 60 * 2,
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
   },
 }));
 
