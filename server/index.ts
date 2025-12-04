@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+// Force Vercel redeploy
 import dotenv from "dotenv";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
