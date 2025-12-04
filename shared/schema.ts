@@ -83,7 +83,18 @@ export type Artwork = {
   order: number;
 };
 export type InsertArtwork = z.infer<typeof insertArtworkSchema>;
-export type Exhibition = typeof exhibitions.$inferSelect;
+export type Exhibition = {
+  id: number;
+  title: string;
+  location: string;
+  year: string;
+  imageUrl: string;
+  description: string;
+  theme: string | null;
+  galleryImages: any[] | null;
+  videoUrl: string | null;
+  order: number;
+};
 export type InsertExhibition = z.infer<typeof insertExhibitionSchema>;
 export type ContactMessage = typeof contactMessages.$inferSelect;
 export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;

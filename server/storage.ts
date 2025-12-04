@@ -84,6 +84,39 @@ export class DatabaseStorage implements IStorage {
       });
   }
 
+  // Helpers to map DB snake_case to Domain camelCase
+  private mapArtwork(dbArtwork: typeof artworks.$inferSelect): Artwork {
+    return {
+      id: dbArtwork.id,
+      title: dbArtwork.title,
+      imageUrl: dbArtwork.image_url,
+      dimensions: dbArtwork.dimensions,
+      technique: dbArtwork.technique,
+      year: dbArtwork.year,
+      description: dbArtwork.description,
+      category: dbArtwork.category,
+      additionalImages: dbArtwork.additional_images as string[] | null,
+      isVisible: dbArtwork.is_visible,
+      showInSlider: dbArtwork.show_in_slider,
+      order: dbArtwork.order
+    };
+  }
+
+  private mapExhibition(dbExhibition: typeof exhibitions.$inferSelect): Exhibition {
+    return {
+      id: dbExhibition.id,
+      title: dbExhibition.title,
+      location: dbExhibition.location,
+      year: dbExhibition.year,
+      imageUrl: dbExhibition.image_url,
+      description: dbExhibition.description,
+      theme: dbExhibition.theme,
+      galleryImages: dbExhibition.gallery_images as any[] | null,
+      videoUrl: dbExhibition.video_url,
+      order: dbExhibition.order
+    };
+  }
+
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -100,14 +133,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getArtworks(): Promise<Artwork[]> {
-    return await db.select().from(artworks)
+    const dbArtworks = await db.select().from(artworks)
       .where(eq(artworks.is_visible, true))
       .orderBy(asc(artworks.order));
+    return dbArtworks.map(this.mapArtwork);
   }
 
   async getArtwork(id: number): Promise<Artwork | undefined> {
     const [artwork] = await db.select().from(artworks).where(eq(artworks.id, id));
-    return artwork;
+    return artwork ? this.mapArtwork(artwork) : undefined;
   }
 
   async createArtwork(insertArtwork: InsertArtwork): Promise<Artwork> {
@@ -119,24 +153,21 @@ export class DatabaseStorage implements IStorage {
       order: insertArtwork.order ?? 0,
       additional_images: insertArtwork.additional_images || []
     }).returning();
-    return artwork;
+    return this.mapArtwork(artwork);
   }
 
   async setArtworks(list: Artwork[]): Promise<void> {
-    // In DB mode, we don't replace all artworks. We might just update orders if needed.
-    // For now, we'll assume this is mostly used for reordering or bulk updates which we handle differently.
-    // If we really need to replace, we'd delete all and insert, but that's dangerous.
-    // We'll log a warning.
     console.warn("setArtworks called but ignored in DatabaseStorage mode");
   }
 
   async getExhibitions(): Promise<Exhibition[]> {
-    return await db.select().from(exhibitions).orderBy(asc(exhibitions.order));
+    const dbExhibitions = await db.select().from(exhibitions).orderBy(asc(exhibitions.order));
+    return dbExhibitions.map(this.mapExhibition);
   }
 
   async getExhibition(id: number): Promise<Exhibition | undefined> {
     const [exhibition] = await db.select().from(exhibitions).where(eq(exhibitions.id, id));
-    return exhibition;
+    return exhibition ? this.mapExhibition(exhibition) : undefined;
   }
 
   async createExhibition(insertExhibition: InsertExhibition): Promise<Exhibition> {
@@ -146,7 +177,7 @@ export class DatabaseStorage implements IStorage {
       video_url: insertExhibition.video_url || null,
       order: insertExhibition.order ?? 0
     }).returning();
-    return exhibition;
+    return this.mapExhibition(exhibition);
   }
 
   async setExhibitions(list: Exhibition[]): Promise<void> {
@@ -168,7 +199,7 @@ export class DatabaseStorage implements IStorage {
       .set({ gallery_images: galleryImages })
       .where(eq(exhibitions.id, id))
       .returning();
-    return updated;
+    return updated ? this.mapExhibition(updated) : undefined;
   }
 
   async deleteExhibition(id: number): Promise<boolean> {
