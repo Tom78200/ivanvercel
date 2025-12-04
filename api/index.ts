@@ -1,6 +1,5 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import helmet from "helmet";
-import session from "express-session";
 import serverless from "serverless-http";
 import { registerRoutes } from "../server/routes";
 
@@ -43,24 +42,29 @@ app.use(helmet({
 
 // ATTENTION: en serverless, la mémoire n'est pas persistée entre invocations.
 // Pour l'admin, on garde une session simple basée cookie pour rester compatible.
-import pgSession from "connect-pg-simple";
-import { pool } from "../server/db";
+import cookieSession from "cookie-session";
 
-app.use(session({
-  store: new (pgSession(session))({
-    pool,
-    createTableIfMissing: true,
-  }),
-  secret: process.env.SESSION_SECRET || "Guthier2024!_SESSION_SECRET_@2024",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-  },
+app.use(cookieSession({
+  name: 'session',
+  keys: [process.env.SESSION_SECRET || "Guthier2024!_SESSION_SECRET_@2024"],
+  maxAge: 24 * 60 * 60 * 1000 * 7, // 1 week
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  httpOnly: true,
 }));
+
+// Compatibility layer for express-session style access if needed
+app.use((req, res, next) => {
+  if (req.session && !req.session.regenerate) {
+    req.session.regenerate = (cb: any) => {
+      cb();
+    };
+    req.session.save = (cb: any) => {
+      cb();
+    };
+  }
+  next();
+});
 
 // Enregistre les routes API existantes
 registerRoutes(app).catch((e) => {

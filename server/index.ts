@@ -5,7 +5,6 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
 import { fileURLToPath } from 'url';
-import session from "express-session";
 import helmet from "helmet";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,24 +19,29 @@ const imagesPath = isProd
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-import pgSession from "connect-pg-simple";
-import { pool } from "./db";
+import cookieSession from "cookie-session";
 
-app.use(session({
-  store: new (pgSession(session))({
-    pool,
-    createTableIfMissing: true,
-  }),
-  secret: process.env.SESSION_SECRET || "Guthier2024!_SESSION_SECRET_@2024",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: app.get("env") === "production",
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-    sameSite: "lax",
-  }
+app.use(cookieSession({
+  name: 'session',
+  keys: [process.env.SESSION_SECRET || "Guthier2024!_SESSION_SECRET_@2024"],
+  maxAge: 24 * 60 * 60 * 1000 * 7, // 1 week
+  secure: app.get("env") === "production",
+  sameSite: "lax",
+  httpOnly: true,
 }));
+
+// Compatibility layer for express-session style access if needed
+app.use((req, res, next) => {
+  if (req.session && !req.session.regenerate) {
+    req.session.regenerate = (cb: any) => {
+      cb();
+    };
+    req.session.save = (cb: any) => {
+      cb();
+    };
+  }
+  next();
+});
 
 // Sécurité: CSP désactivée en développement (Vite/HMR), stricte en production
 if (app.get("env") === "development") {

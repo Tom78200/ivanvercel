@@ -1,9 +1,4 @@
 import {
-  users,
-  artworks,
-  exhibitions,
-  contactMessages,
-  siteSettings,
   type User,
   type InsertUser,
   type Artwork,
@@ -13,8 +8,7 @@ import {
   type ContactMessage,
   type InsertContactMessage
 } from "@shared/schema";
-import { db } from "./db";
-import { eq, asc } from "drizzle-orm";
+import { supabase } from "./supabase";
 
 export interface FeaturedWork {
   id: number;
@@ -71,21 +65,16 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // Helper for site settings
   private async getSetting<T>(key: string, defaultValue: T): Promise<T> {
-    const [setting] = await db.select().from(siteSettings).where(eq(siteSettings.key, key));
-    return setting ? (setting.value as T) : defaultValue;
+    const { data } = await supabase.from('site_settings').select('value').eq('key', key).single();
+    return data ? (data.value as T) : defaultValue;
   }
 
   private async setSetting<T>(key: string, value: T): Promise<void> {
-    await db.insert(siteSettings)
-      .values({ key, value: value as any })
-      .onConflictDoUpdate({
-        target: siteSettings.key,
-        set: { value: value as any }
-      });
+    await supabase.from('site_settings').upsert({ key, value: value as any }, { onConflict: 'key' });
   }
 
   // Helpers to map DB snake_case to Domain camelCase
-  private mapArtwork(dbArtwork: typeof artworks.$inferSelect): Artwork {
+  private mapArtwork(dbArtwork: any): Artwork {
     return {
       id: dbArtwork.id,
       title: dbArtwork.title,
@@ -102,7 +91,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  private mapExhibition(dbExhibition: typeof exhibitions.$inferSelect): Exhibition {
+  private mapExhibition(dbExhibition: any): Exhibition {
     return {
       id: dbExhibition.id,
       title: dbExhibition.title,
@@ -118,42 +107,46 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    const { data } = await supabase.from('users').select('*').eq('id', id).single();
+    return data || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    const { data } = await supabase.from('users').select('*').eq('username', username).single();
+    return data || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
+    const { data, error } = await supabase.from('users').insert(insertUser).select().single();
+    if (error) throw error;
+    return data;
   }
 
   async getArtworks(): Promise<Artwork[]> {
-    const dbArtworks = await db.select().from(artworks)
-      .where(eq(artworks.is_visible, true))
-      .orderBy(asc(artworks.order));
-    return dbArtworks.map(this.mapArtwork);
+    const { data } = await supabase.from('artworks')
+      .select('*')
+      .eq('is_visible', true)
+      .order('order', { ascending: true });
+    return (data || []).map(this.mapArtwork);
   }
 
   async getArtwork(id: number): Promise<Artwork | undefined> {
-    const [artwork] = await db.select().from(artworks).where(eq(artworks.id, id));
-    return artwork ? this.mapArtwork(artwork) : undefined;
+    const { data } = await supabase.from('artworks').select('*').eq('id', id).single();
+    return data ? this.mapArtwork(data) : undefined;
   }
 
   async createArtwork(insertArtwork: InsertArtwork): Promise<Artwork> {
-    const [artwork] = await db.insert(artworks).values({
+    const { data, error } = await supabase.from('artworks').insert({
       ...insertArtwork,
       category: insertArtwork.category || 'Autres',
       is_visible: insertArtwork.is_visible ?? true,
       show_in_slider: insertArtwork.show_in_slider ?? true,
       order: insertArtwork.order ?? 0,
       additional_images: insertArtwork.additional_images || []
-    }).returning();
-    return this.mapArtwork(artwork);
+    }).select().single();
+
+    if (error) throw error;
+    return this.mapArtwork(data);
   }
 
   async setArtworks(list: Artwork[]): Promise<void> {
@@ -161,23 +154,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getExhibitions(): Promise<Exhibition[]> {
-    const dbExhibitions = await db.select().from(exhibitions).orderBy(asc(exhibitions.order));
-    return dbExhibitions.map(this.mapExhibition);
+    const { data } = await supabase.from('exhibitions').select('*').order('order', { ascending: true });
+    return (data || []).map(this.mapExhibition);
   }
 
   async getExhibition(id: number): Promise<Exhibition | undefined> {
-    const [exhibition] = await db.select().from(exhibitions).where(eq(exhibitions.id, id));
-    return exhibition ? this.mapExhibition(exhibition) : undefined;
+    const { data } = await supabase.from('exhibitions').select('*').eq('id', id).single();
+    return data ? this.mapExhibition(data) : undefined;
   }
 
   async createExhibition(insertExhibition: InsertExhibition): Promise<Exhibition> {
-    const [exhibition] = await db.insert(exhibitions).values({
+    const { data, error } = await supabase.from('exhibitions').insert({
       ...insertExhibition,
       gallery_images: insertExhibition.gallery_images || [],
       video_url: insertExhibition.video_url || null,
       order: insertExhibition.order ?? 0
-    }).returning();
-    return this.mapExhibition(exhibition);
+    }).select().single();
+
+    if (error) throw error;
+    return this.mapExhibition(data);
   }
 
   async setExhibitions(list: Exhibition[]): Promise<void> {
@@ -185,38 +180,41 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createContactMessage(insertMessage: InsertContactMessage): Promise<ContactMessage> {
-    const [message] = await db.insert(contactMessages).values(insertMessage).returning();
-    return message;
+    const { data, error } = await supabase.from('contact_messages').insert(insertMessage).select().single();
+    if (error) throw error;
+    return data;
   }
 
   async deleteArtwork(id: number): Promise<boolean> {
-    const [deleted] = await db.delete(artworks).where(eq(artworks.id, id)).returning();
-    return !!deleted;
+    const { error } = await supabase.from('artworks').delete().eq('id', id);
+    return !error;
   }
 
   async updateExhibitionGallery(id: number, galleryImages: { url: string; caption: string }[]): Promise<Exhibition | undefined> {
-    const [updated] = await db.update(exhibitions)
-      .set({ gallery_images: galleryImages })
-      .where(eq(exhibitions.id, id))
-      .returning();
-    return updated ? this.mapExhibition(updated) : undefined;
+    const { data, error } = await supabase.from('exhibitions')
+      .update({ gallery_images: galleryImages })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) return undefined;
+    return this.mapExhibition(data);
   }
 
   async deleteExhibition(id: number): Promise<boolean> {
-    const [deleted] = await db.delete(exhibitions).where(eq(exhibitions.id, id)).returning();
-    return !!deleted;
+    const { error } = await supabase.from('exhibitions').delete().eq('id', id);
+    return !error;
   }
 
   async reorderArtworks(newOrder: { id: number, order: number }[]): Promise<void> {
-    // This could be optimized with a single query or transaction
     for (const { id, order } of newOrder) {
-      await db.update(artworks).set({ order }).where(eq(artworks.id, id));
+      await supabase.from('artworks').update({ order }).eq('id', id);
     }
   }
 
   async reorderExhibitions(newOrder: { id: number, order: number }[]): Promise<void> {
     for (const { id, order } of newOrder) {
-      await db.update(exhibitions).set({ order }).where(eq(exhibitions.id, id));
+      await supabase.from('exhibitions').update({ order }).eq('id', id);
     }
   }
 
