@@ -88,6 +88,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await ensureAdminUser();
   console.log('[BOOT] Mode 100% Supabase activé');
 
+
+  // Login route
+  app.post("/api/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      const { data: user } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', username)
+        .single();
+
+      if (!user || !(await bcrypt.compare(String(password), user.password))) {
+        return res.status(401).json({ error: "Identifiants incorrects" });
+      }
+
+      // Set session
+      (req.session as any).isAdmin = true;
+      (req.session as any).adminUser = { id: user.id, username: user.username };
+
+      return res.json({ success: true, user: { id: user.id, username: user.username } });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Logout route
+  app.post("/api/logout", (req, res) => {
+    (req.session as any) = null;
+    res.json({ success: true });
+  });
+
   // Get all artworks
   app.get("/api/artworks", async (req, res) => {
     try {
