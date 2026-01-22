@@ -8,7 +8,7 @@ import {
   type ContactMessage,
   type InsertContactMessage
 } from "@shared/schema";
-import { supabase } from "./supabase";
+import { supabase } from "./supabase.js";
 
 export interface FeaturedWork {
   id: number;

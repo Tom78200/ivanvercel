@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import dotenv from "dotenv";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./storage.js";
 import { insertArtworkSchema, insertExhibitionSchema, insertContactMessageSchema } from "@shared/schema";
 import multer from "multer";
 import path from "path";

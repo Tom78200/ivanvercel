@@ -1,8 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 // Force Vercel redeploy
 import dotenv from "dotenv";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { registerRoutes } from "./routes.js";
+import { setupVite, serveStatic, log } from "./vite.js";
 import path from "path";
 import { fileURLToPath } from 'url';
 import helmet from "helmet";
