@@ -146,20 +146,24 @@ export default function Admin() {
     alert("DEBUG: CLICK OK - Tentative de connexion..."); // FORCE VISIBLE FEEDBACK
     console.log("Login attempt started", { username });
     try {
+      alert("DEBUG: Before Fetch");
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ username, password })
       });
+      alert("DEBUG: After Fetch - Status: " + res.status);
       console.log("Login response status:", res.status);
 
       if (res.ok) {
+        alert("DEBUG: Login Success");
         console.log("Login success");
         setStep("dashboard");
         setError("");
       } else {
         const text = await res.text();
+        alert("DEBUG: Login Failed - " + text.substring(0, 100));
         console.log("Login failed body:", text);
         try {
           const data = JSON.parse(text);
