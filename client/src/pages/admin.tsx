@@ -143,6 +143,7 @@ export default function Admin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Login attempt started", { username });
     try {
       const res = await fetch("/api/login", {
         method: "POST",
@@ -150,16 +151,26 @@ export default function Admin() {
         credentials: "include",
         body: JSON.stringify({ username, password })
       });
+      console.log("Login response status:", res.status);
+
       if (res.ok) {
+        console.log("Login success");
         setStep("dashboard");
         setError("");
-        // Redirect guards will now pass for subpages
       } else {
-        const data = await res.json();
-        setError(data.error || "Mot de passe incorrect");
+        const text = await res.text();
+        console.log("Login failed body:", text);
+        try {
+          const data = JSON.parse(text);
+          setError(data.error || "Mot de passe incorrect");
+        } catch {
+          setError("Erreur serveur (réponse invalide): " + res.status);
+        }
       }
-    } catch {
-      setError("Erreur réseau");
+    } catch (err) {
+      console.error("Login network error:", err);
+      setError("Erreur réseau ou connexion impossible");
+      alert("Erreur réseau : vérifiez la console pour plus de détails.");
     }
   };
 
