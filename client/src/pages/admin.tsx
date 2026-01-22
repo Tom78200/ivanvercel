@@ -143,6 +143,7 @@ export default function Admin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    alert("DEBUG: CLICK OK - Tentative de connexion..."); // FORCE VISIBLE FEEDBACK
     console.log("Login attempt started", { username });
     try {
       const res = await fetch("/api/login", {
