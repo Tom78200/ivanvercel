@@ -85,7 +85,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  await ensureAdminUser();
+  // Fire and forget admin check to avoid blocking startup (Vercel Cold Start)
+  ensureAdminUser().catch(err => console.error("Admin seed failed:", err));
   console.log('[BOOT] Mode 100% Supabase activé');
 
 
