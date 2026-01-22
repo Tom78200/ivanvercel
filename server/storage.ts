@@ -7,7 +7,7 @@ import {
   type InsertExhibition,
   type ContactMessage,
   type InsertContactMessage
-} from "@shared/schema";
+} from "../shared/schema.js";
 import { supabase } from "./supabase.js";
 
 export interface FeaturedWork {
