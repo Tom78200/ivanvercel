@@ -19,6 +19,7 @@ const imagesPath = isProd
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.set("trust proxy", 1); // Indispensable pour Vercel (secure cookies derrière proxy)
 import cookieSession from "cookie-session";
 
 app.use(cookieSession({

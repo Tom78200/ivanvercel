@@ -62,6 +62,7 @@ export default function Admin() {
       data.append("image", form.imageFile);
       const uploadRes = await fetch("/api/upload", {
         method: "POST",
+        credentials: "include",
         body: data
       });
       if (!uploadRes.ok) {
@@ -76,6 +77,7 @@ export default function Admin() {
       const res = await fetch("/api/artworks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           title: form.title,
           technique: form.technique,
@@ -115,18 +117,18 @@ export default function Admin() {
   // Fonction pour ajouter des images supplémentaires
   async function handleAddAdditionalImages(artworkId: number) {
     if (!additionalImagesFile || additionalImagesFile.length === 0) return;
-    
+
     const formData = new FormData();
     for (let i = 0; i < additionalImagesFile.length; i++) {
       formData.append('images', additionalImagesFile[i]);
     }
-    
+
     try {
       const response = await fetch(`/api/artworks/${artworkId}/additional-images`, {
         method: 'POST',
         body: formData,
       });
-      
+
       if (response.ok) {
         setAddingImagesTo(null);
         setAdditionalImagesFile(null);
@@ -145,6 +147,7 @@ export default function Admin() {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username, password })
       });
       if (res.ok) {
@@ -161,7 +164,7 @@ export default function Admin() {
   };
 
   async function handleLogout() {
-    await fetch("/api/logout", { method: "POST" });
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
     setStep("auth");
     setPassword("");
   }
@@ -171,7 +174,7 @@ export default function Admin() {
     setDeletingId(id);
     setDeleteError("");
     try {
-      const res = await fetch(`/api/artworks/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/artworks/${id}`, { method: "DELETE", credentials: "include" });
       if (!res.ok) {
         const data = await res.json();
         setDeleteError(data.error || "Erreur lors de la suppression.");
@@ -198,6 +201,7 @@ export default function Admin() {
     await fetch("/api/artworks/order", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(artworksOrder.map(a => ({ id: a.id, order: a.order ?? 0 })))
     });
     await refetch();
@@ -338,8 +342,8 @@ export default function Admin() {
                     <div className="text-xs opacity-60">+{artwork.additionalImages.length} image(s) supplémentaire(s)</div>
                   )}
                   <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                    <button 
-                      className="bg-blue-500 hover:bg-blue-600 text-white rounded p-2 font-semibold flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-xs sm:text-sm" 
+                    <button
+                      className="bg-blue-500 hover:bg-blue-600 text-white rounded p-2 font-semibold flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-xs sm:text-sm"
                       onClick={() => setAddingImagesTo(artwork.id)}
                       disabled={artwork.additionalImages && artwork.additionalImages.length >= 3}
                     >
@@ -347,27 +351,27 @@ export default function Admin() {
                     </button>
                     <button className="bg-red-500 hover:bg-red-600 text-white rounded p-2 font-semibold flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-xs sm:text-sm" onClick={() => handleDelete(artwork.id)} disabled={deletingId === artwork.id} aria-label="Supprimer cette œuvre">Supprimer</button>
                   </div>
-                  
+
                   {/* Formulaire d'ajout d'images supplémentaires */}
                   {addingImagesTo === artwork.id && (
                     <div className="mt-4 p-3 bg-white/5 rounded border border-white/10">
                       <h4 className="text-xs sm:text-sm font-semibold mb-2">Ajouter des images supplémentaires</h4>
-                      <input 
-                        type="file" 
-                        multiple 
-                        accept="image/*" 
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
                         onChange={(e) => setAdditionalImagesFile(e.target.files)}
                         className="w-full p-2 rounded bg-white/20 text-white border border-white/30 mb-2 text-xs sm:text-sm"
                       />
                       <div className="flex flex-col sm:flex-row gap-2">
-                        <button 
+                        <button
                           onClick={() => handleAddAdditionalImages(artwork.id)}
                           disabled={!additionalImagesFile || additionalImagesFile.length === 0}
                           className="bg-green-500 hover:bg-green-600 text-white rounded p-2 font-semibold flex-1 disabled:opacity-50 text-xs sm:text-sm"
                         >
                           Ajouter
                         </button>
-                        <button 
+                        <button
                           onClick={() => {
                             setAddingImagesTo(null);
                             setAdditionalImagesFile(null);

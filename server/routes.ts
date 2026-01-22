@@ -43,7 +43,7 @@ async function uploadBufferToSupabase(originalName: string, mimeType: string, bu
 // Middleware de protection admin (Ivan uniquement)
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
   const session = req.session as any;
-  if (session?.isAdmin && session?.adminUser?.username === 'ivan') {
+  if (session?.isAdmin) {
     return next();
   }
   res.status(401).json({ error: "Accès non autorisé" });
