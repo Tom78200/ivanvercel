@@ -89,6 +89,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log('[BOOT] Mode 100% Supabase activé');
 
 
+  // Diagnostic routes
+  app.get("/api/debug-env", (req, res) => {
+    const url = process.env.SUPABASE_URL || "";
+    const serviceRole = process.env.SUPABASE_SERVICE_ROLE || "";
+    const bucket = process.env.SUPABASE_BUCKET || "";
+    const adminPass = process.env.ADMIN_PASSWORD || "";
+    
+    return res.json({
+      SUPABASE_URL: {
+        preview: url ? `${url.substring(0, 15)}...` : "non configurée",
+        startsWithHttps: url.startsWith("https://"),
+        length: url.length
+      },
+      SUPABASE_SERVICE_ROLE: {
+        preview: serviceRole ? `${serviceRole.substring(0, 10)}...` : "non configurée",
+        length: serviceRole.length
+      },
+      SUPABASE_BUCKET: bucket || "non configurée",
+      ADMIN_PASSWORD: {
+        isSet: !!adminPass,
+        length: adminPass.length
+      },
+      NODE_ENV: process.env.NODE_ENV || "non défini"
+    });
+  });
+
+  app.get("/api/debug-supabase", async (req, res) => {
+    const status: any = {
+      internet_check: "pending",
+      supabase_ping: "pending",
+      users_query: "pending",
+      errors: []
+    };
+
+    // Test general internet access
+    try {
+      const start = Date.now();
+      await fetch("https://clients3.google.com/generate_204", { signal: AbortSignal.timeout(3000) });
+      status.internet_check = `success (${Date.now() - start}ms)`;
+    } catch (e: any) {
+      status.internet_check = "failed";
+      status.errors.push("Internet check failed: " + e.message);
+    }
+
+    // Test Supabase URL connectivity
+    if (process.env.SUPABASE_URL) {
+      try {
+        const start = Date.now();
+        await fetch(process.env.SUPABASE_URL, { signal: AbortSignal.timeout(3000) });
+        status.supabase_ping = `success (${Date.now() - start}ms)`;
+      } catch (e: any) {
+        status.supabase_ping = "failed";
+        status.errors.push("Supabase ping failed: " + e.message);
+      }
+    } else {
+      status.supabase_ping = "no URL";
+    }
+
+    // Test user query
+    try {
+      const start = Date.now();
+      const { data, error } = await supabase.from('users').select('id').limit(1);
+      if (error) {
+        status.users_query = "error";
+        status.errors.push("Users query error: " + error.message);
+      } else {
+        status.users_query = `success (${Date.now() - start}ms), rows=${data?.length || 0}`;
+      }
+    } catch (e: any) {
+      status.users_query = "failed";
+      status.errors.push("Users query failed: " + e.message);
+    }
+
+    return res.json(status);
+  });
+
   // Login route
   app.post("/api/login", async (req, res) => {
     try {
