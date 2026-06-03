@@ -85,14 +85,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // Fire and forget admin check to avoid blocking startup (Vercel Cold Start)
-  ensureAdminUser().catch(err => console.error("Admin seed failed:", err));
+  let adminChecked = false;
   console.log('[BOOT] Mode 100% Supabase activé');
 
 
   // Login route
   app.post("/api/login", async (req, res) => {
     try {
+      if (!adminChecked) {
+        await ensureAdminUser().catch(err => console.error("Lazy admin seed failed:", err));
+        adminChecked = true;
+      }
       const { username, password } = req.body;
       const { data: user } = await supabase
         .from('users')
