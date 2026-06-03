@@ -1,6 +1,5 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import helmet from "helmet";
-import serverless from "serverless-http";
 import { registerRoutes } from "../server/routes.js";
 
 // Vercel serverless handler wrapping our Express app
@@ -78,7 +77,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   res.status(status).json({ message });
 });
 
-export default serverless(app);
+export default app;
 
 
 
