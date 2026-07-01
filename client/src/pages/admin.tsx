@@ -361,9 +361,9 @@ export default function Admin() {
                     <button
                       className="bg-blue-500 hover:bg-blue-600 text-white rounded p-2 font-semibold flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-xs sm:text-sm"
                       onClick={() => setAddingImagesTo(artwork.id)}
-                      disabled={artwork.additionalImages && artwork.additionalImages.length >= 3}
+                      disabled={(artwork.additionalImages?.length ?? 0) >= 3}
                     >
-                      {artwork.additionalImages && artwork.additionalImages.length >= 3 ? 'Max atteint' : 'Ajouter photos'}
+                      {(artwork.additionalImages?.length ?? 0) >= 3 ? 'Max atteint' : 'Ajouter photos'}
                     </button>
                     <button className="bg-red-500 hover:bg-red-600 text-white rounded p-2 font-semibold flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-xs sm:text-sm" onClick={() => handleDelete(artwork.id)} disabled={deletingId === artwork.id} aria-label="Supprimer cette œuvre">Supprimer</button>
                   </div>

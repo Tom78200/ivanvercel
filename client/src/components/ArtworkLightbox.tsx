@@ -132,7 +132,7 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
                 <motion.img 
                   key={currentImageIndex}
                   src={allImages[currentImageIndex]} 
-                  alt={`${artwork.title} - Image ${currentImageIndex + 1}`}
+                  alt={`${artwork?.title || ""} - Image ${currentImageIndex + 1}`}
                   className="w-full h-full object-contain transform-gpu will-change-transform"
                   onLoad={() => setIsImageLoaded(true)}
                   onClick={(e) => e.stopPropagation()}
@@ -142,7 +142,7 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
                   transition={{ duration: reduceMotion ? 0.25 : 0.45, ease: "easeInOut" }}
                   loading="eager"
                   decoding="async"
-                  fetchpriority="high"
+                  fetchPriority="high"
                 />
               </AnimatePresence>
               
@@ -207,18 +207,22 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
               )}
               
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-0">
-                <div className="text-white">
-                  <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-playfair mb-1 sm:mb-2 will-change-transform">
-                    <TranslatedText text={artwork.title} />
-                  </h3>
-                  <p className="text-sm sm:text-base md:text-lg opacity-80 will-change-transform">
-                    <TranslatedText text={`${artwork.technique}`} /> • {artwork.dimensions} • {artwork.year}
-                  </p>
-                </div>
-                {/* Description cachée sur mobile */}
-                <div className="text-right text-sm sm:text-base max-w-md hidden md:block opacity-70 will-change-transform">
-                  <p className="line-clamp-2"><TranslatedText text={artwork.description || ''} /></p>
-                </div>
+                {artwork && (
+                  <>
+                    <div className="text-white">
+                      <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-playfair mb-1 sm:mb-2 will-change-transform">
+                        <TranslatedText text={artwork.title} />
+                      </h3>
+                      <p className="text-sm sm:text-base md:text-lg opacity-80 will-change-transform">
+                        <TranslatedText text={`${artwork.technique}`} /> • {artwork.dimensions} • {artwork.year}
+                      </p>
+                    </div>
+                    {/* Description cachée sur mobile */}
+                    <div className="text-right text-sm sm:text-base max-w-md hidden md:block opacity-70 will-change-transform">
+                      <p className="line-clamp-2"><TranslatedText text={artwork.description || ''} /></p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
