@@ -20,6 +20,9 @@ export default function Admin() {
   const [isAdding, setIsAdding] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showBulkForm, setShowBulkForm] = useState(false);
+  const [bulkFiles, setBulkFiles] = useState<File[]>([]);
+  const [isBulkAdding, setIsBulkAdding] = useState(false);
   const [artworksOrder, setArtworksOrder] = useState<Artwork[]>([]);
   const [, setLocation] = useLocation();
   const [addingImagesTo, setAddingImagesTo] = useState<number | null>(null);
@@ -109,6 +112,63 @@ export default function Admin() {
       setAddError("Erreur réseau lors de l'ajout.");
     } finally {
       setIsAdding(false);
+    }
+  }
+
+  async function handleBulkAddArtworks(e: React.FormEvent) {
+    e.preventDefault();
+    setAddError("");
+    setAddSuccess("");
+    if (bulkFiles.length === 0) {
+      setAddError("Veuillez sélectionner au moins une image.");
+      return;
+    }
+    setIsBulkAdding(true);
+    try {
+      let successCount = 0;
+      for (const file of bulkFiles) {
+        const data = new FormData();
+        data.append("image", file);
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          credentials: "include",
+          body: data
+        });
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json();
+          throw new Error(err.error || `Erreur lors de l'upload de l'image ${file.name}.`);
+        }
+        const uploadData = await uploadRes.json();
+        const imageUrl = uploadData.imageUrl;
+
+        const cleanTitle = file.name.replace(/\.[^/.]+$/, "");
+        const res = await fetch("/api/artworks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            title: cleanTitle,
+            technique: "Non spécifiée",
+            year: new Date().getFullYear().toString(),
+            dimensions: "Non spécifiées",
+            description: "Importé en lot",
+            category: "Autres",
+            imageUrl,
+          })
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || `Erreur de création de l'œuvre pour ${file.name}.`);
+        }
+        successCount++;
+      }
+      setAddSuccess(`${successCount} œuvres importées avec succès !`);
+      setBulkFiles([]);
+      await refetch();
+    } catch (e: any) {
+      setAddError(e.message || "Erreur réseau lors de l'importation en lot.");
+    } finally {
+      setIsBulkAdding(false);
     }
   }
 
@@ -275,14 +335,35 @@ export default function Admin() {
             Gérer les expositions
           </button>
         </div>
-        {!showForm && (
+        <div className="flex flex-col sm:flex-row gap-3 mb-6 sm:mb-8">
           <button
-            className="bg-green-500 hover:bg-green-600 text-white rounded p-3 font-semibold mb-6 sm:mb-8 w-full text-sm sm:text-base"
-            onClick={() => setShowForm(true)}
+            className={`flex-1 p-3 font-semibold rounded text-sm sm:text-base border transition ${
+              showForm && !showBulkForm
+                ? "bg-green-600 text-white border-green-600"
+                : "bg-white/10 text-white hover:bg-white/20 border-white/20"
+            }`}
+            onClick={() => {
+              setShowForm(true);
+              setShowBulkForm(false);
+            }}
           >
-            Uploader une œuvre
+            Ajouter une œuvre (Manuel)
           </button>
-        )}
+          <button
+            className={`flex-1 p-3 font-semibold rounded text-sm sm:text-base border transition ${
+              showBulkForm
+                ? "bg-green-600 text-white border-green-600"
+                : "bg-white/10 text-white hover:bg-white/20 border-white/20"
+            }`}
+            onClick={() => {
+              setShowForm(false);
+              setShowBulkForm(true);
+            }}
+          >
+            Importation rapide (Plusieurs images d'un coup)
+          </button>
+        </div>
+
         {showForm && (
           <form onSubmit={handleAddArtwork} className="bg-white/10 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 border border-white/20 flex flex-col gap-3 sm:gap-4">
             <h3 className="text-lg sm:text-xl font-semibold mb-2">Ajouter une œuvre</h3>
@@ -301,6 +382,49 @@ export default function Admin() {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-2">
               <button type="submit" disabled={!canSubmit} className="bg-green-500 hover:bg-green-600 text-white rounded p-2 font-semibold flex-1 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-sm sm:text-base" aria-label="Ajouter l'œuvre">{isAdding ? "Ajout..." : "Ajouter l'œuvre"}</button>
               <button type="button" className="bg-gray-700 hover:bg-gray-800 text-white rounded p-2 font-semibold flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-sm sm:text-base" onClick={() => setShowForm(false)} aria-label="Annuler l'ajout">Annuler</button>
+            </div>
+            {addError && <div className="text-red-400 text-center mt-2 text-sm">{addError}</div>}
+            {addSuccess && <div className="text-green-400 text-center mt-2 text-sm">{addSuccess}</div>}
+          </form>
+        )}
+
+        {showBulkForm && (
+          <form onSubmit={handleBulkAddArtworks} className="bg-white/10 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 border border-white/20 flex flex-col gap-3 sm:gap-4">
+            <h3 className="text-lg sm:text-xl font-semibold mb-2">Importation rapide en lot</h3>
+            <p className="text-xs sm:text-sm text-white/70">
+              Sélectionnez plusieurs images. Chaque image créera automatiquement une œuvre avec le nom du fichier comme titre (que vous pourrez modifier plus tard).
+            </p>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={e => setBulkFiles(Array.from(e.target.files || []))}
+              className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base"
+              required
+            />
+            {bulkFiles.length > 0 && (
+              <div className="text-xs sm:text-sm opacity-80">
+                {bulkFiles.length} image(s) sélectionnée(s)
+              </div>
+            )}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-2">
+              <button
+                type="submit"
+                disabled={isBulkAdding || bulkFiles.length === 0}
+                className="bg-green-500 hover:bg-green-600 text-white rounded p-2 font-semibold flex-1 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-sm sm:text-base"
+              >
+                {isBulkAdding ? "Importation..." : `Lancer l'importation (${bulkFiles.length} images)`}
+              </button>
+              <button
+                type="button"
+                className="bg-gray-700 hover:bg-gray-800 text-white rounded p-2 font-semibold flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-sm sm:text-base"
+                onClick={() => {
+                  setShowBulkForm(false);
+                  setBulkFiles([]);
+                }}
+              >
+                Annuler
+              </button>
             </div>
             {addError && <div className="text-red-400 text-center mt-2 text-sm">{addError}</div>}
             {addSuccess && <div className="text-green-400 text-center mt-2 text-sm">{addSuccess}</div>}

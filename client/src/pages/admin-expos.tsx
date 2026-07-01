@@ -20,6 +20,10 @@ export default function AdminExpos() {
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [orderDirty, setOrderDirty] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [showBulkForm, setShowBulkForm] = useState(false);
+  const [bulkFiles, setBulkFiles] = useState<File[]>([]);
+  const [isBulkAdding, setIsBulkAdding] = useState(false);
 
   // Vérifier session admin au montage
   useEffect(() => {
@@ -133,6 +137,62 @@ export default function AdminExpos() {
     }
   }
 
+  async function handleBulkAddExpos(e: React.FormEvent) {
+    e.preventDefault();
+    setAddError("");
+    if (bulkFiles.length === 0) {
+      setAddError("Veuillez sélectionner au moins une image de couverture.");
+      return;
+    }
+    setIsBulkAdding(true);
+    try {
+      let successCount = 0;
+      for (const file of bulkFiles) {
+        const data = new FormData();
+        data.append("image", file);
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: data
+        });
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json();
+          throw new Error(err.error || `Erreur lors de l'upload de l'image de couverture ${file.name}.`);
+        }
+        const uploadData = await uploadRes.json();
+        const imageUrl = uploadData.imageUrl;
+
+        const cleanTitle = file.name.replace(/\.[^/.]+$/, "");
+        const res = await fetch("/api/exhibitions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: cleanTitle,
+            location: "Non spécifié",
+            year: new Date().getFullYear().toString(),
+            imageUrl,
+            description: "Nouvelle exposition",
+            theme: "",
+            galleryImages: [],
+          })
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || `Erreur de création de l'exposition pour ${file.name}.`);
+        }
+        successCount++;
+      }
+      setBulkFiles([]);
+      const refreshed = await fetch("/api/exhibitions").then(r => r.ok ? r.json() : []);
+      const normalized = (refreshed || []).map((e: any, idx: number) => ({ ...e, order: typeof e.order === 'number' ? e.order : idx }));
+      setExpos(normalized);
+      alert(`${successCount} expositions créées avec succès !`);
+    } catch (e: any) {
+      setAddError(e.message || "Erreur réseau lors de l'importation en lot.");
+    } finally {
+      setIsBulkAdding(false);
+    }
+  }
+
   async function handleDeleteExpo(id: number) {
     if (!window.confirm("Supprimer cette exposition ?")) return;
     try {
@@ -197,19 +257,95 @@ export default function AdminExpos() {
           <h3 className="text-xl font-semibold">Ordre des expositions (glisser‑déposer)</h3>
           <button onClick={saveExposOrder} disabled={!orderDirty} className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded px-4 py-2 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">Enregistrer l'ordre</button>
         </div>
-        <form onSubmit={handleAddExpo} className="bg-white/10 rounded-xl p-6 mb-8 border border-white/20 flex flex-col gap-4">
-          <h3 className="text-xl font-semibold mb-2">Créer une exposition</h3>
-          <input name="title" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Titre*" className="p-2 rounded bg-white/20 text-white border border-white/30" required />
-          <input name="location" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Lieu*" className="p-2 rounded bg-white/20 text-white border border-white/30" required />
-          <input name="year" value={form.year} onChange={e => setForm(f => ({ ...f, year: e.target.value }))} placeholder="Année*" className="p-2 rounded bg-white/20 text-white border border-white/30" required />
-          <input name="imageFile" type="file" accept="image/*" ref={fileInputRef} className="p-2 rounded bg-white/20 text-white border border-white/30" required />
-          <label className="text-sm text-white/80" htmlFor="expo-theme">Thème</label>
-          <input id="expo-theme" name="theme" value={form.theme} onChange={e => setForm(f => ({ ...f, theme: e.target.value }))} placeholder="Ex: Dualité, Renaissance, Abstraction..." className="p-2 rounded bg-white/20 text-white border border-white/30" />
-          <label className="text-sm text-white/80" htmlFor="expo-description">Description (accroche longue)</label>
-          <textarea id="expo-description" name="description" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Description*" className="p-2 rounded bg-white/20 text-white border border-white/30" rows={3} required />
-          <button type="submit" className="bg-green-500 hover:bg-green-600 text-white rounded p-2 font-semibold mt-2 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400" aria-label="Créer l'exposition">{isAdding ? "Ajout..." : "Créer l'exposition"}</button>
-          {addError && <div className="text-red-400 text-center mt-2">{addError}</div>}
-        </form>
+        <div className="flex flex-col sm:flex-row gap-3 mb-6 sm:mb-8">
+          <button
+            className={`flex-1 p-3 font-semibold rounded text-sm sm:text-base border transition ${
+              showForm && !showBulkForm
+                ? "bg-green-600 text-white border-green-600"
+                : "bg-white/10 text-white hover:bg-white/20 border-white/20"
+            }`}
+            onClick={() => {
+              setShowForm(true);
+              setShowBulkForm(false);
+            }}
+          >
+            Créer une exposition (Manuel)
+          </button>
+          <button
+            className={`flex-1 p-3 font-semibold rounded text-sm sm:text-base border transition ${
+              showBulkForm
+                ? "bg-green-600 text-white border-green-600"
+                : "bg-white/10 text-white hover:bg-white/20 border-white/20"
+            }`}
+            onClick={() => {
+              setShowForm(false);
+              setShowBulkForm(true);
+            }}
+          >
+            Création rapide (Plusieurs expos d'un coup via couvertures)
+          </button>
+        </div>
+
+        {showForm && (
+          <form onSubmit={handleAddExpo} className="bg-white/10 rounded-xl p-6 mb-8 border border-white/20 flex flex-col gap-4">
+            <h3 className="text-xl font-semibold mb-2">Créer une exposition</h3>
+            <input name="title" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Titre*" className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" required />
+            <input name="location" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="Lieu*" className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" required />
+            <input name="year" value={form.year} onChange={e => setForm(f => ({ ...f, year: e.target.value }))} placeholder="Année*" className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" required />
+            <input name="imageFile" type="file" accept="image/*" ref={fileInputRef} className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" required />
+            <label className="text-sm text-white/80" htmlFor="expo-theme">Thème</label>
+            <input id="expo-theme" name="theme" value={form.theme} onChange={e => setForm(f => ({ ...f, theme: e.target.value }))} placeholder="Ex: Dualité, Renaissance, Abstraction..." className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" />
+            <label className="text-sm text-white/80" htmlFor="expo-description">Description (accroche longue)</label>
+            <textarea id="expo-description" name="description" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Description*" className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" rows={3} required />
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-2">
+              <button type="submit" className="bg-green-500 hover:bg-green-600 text-white rounded p-2 font-semibold flex-1 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-sm sm:text-base" aria-label="Créer l'exposition">{isAdding ? "Ajout..." : "Créer l'exposition"}</button>
+              <button type="button" className="bg-gray-700 hover:bg-gray-800 text-white rounded p-2 font-semibold flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-sm sm:text-base" onClick={() => setShowForm(false)} aria-label="Annuler l'ajout">Annuler</button>
+            </div>
+            {addError && <div className="text-red-400 text-center mt-2 text-sm">{addError}</div>}
+          </form>
+        )}
+
+        {showBulkForm && (
+          <form onSubmit={handleBulkAddExpos} className="bg-white/10 rounded-xl p-6 mb-8 border border-white/20 flex flex-col gap-4">
+            <h3 className="text-xl font-semibold mb-2">Création rapide d'expositions en lot</h3>
+            <p className="text-xs sm:text-sm text-white/70">
+              Sélectionnez une ou plusieurs images de couverture. Chaque image créera automatiquement une exposition avec le nom de l'image comme titre.
+            </p>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={e => setBulkFiles(Array.from(e.target.files || []))}
+              className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base"
+              required
+            />
+            {bulkFiles.length > 0 && (
+              <div className="text-xs sm:text-sm opacity-80">
+                {bulkFiles.length} image(s) de couverture sélectionnée(s)
+              </div>
+            )}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-2">
+              <button
+                type="submit"
+                disabled={isBulkAdding || bulkFiles.length === 0}
+                className="bg-green-500 hover:bg-green-600 text-white rounded p-2 font-semibold flex-1 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-sm sm:text-base"
+              >
+                {isBulkAdding ? "Création..." : `Lancer la création (${bulkFiles.length} expositions)`}
+              </button>
+              <button
+                type="button"
+                className="bg-gray-700 hover:bg-gray-800 text-white rounded p-2 font-semibold flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-sm sm:text-base"
+                onClick={() => {
+                  setShowBulkForm(false);
+                  setBulkFiles([]);
+                }}
+              >
+                Annuler
+              </button>
+            </div>
+            {addError && <div className="text-red-400 text-center mt-2 text-sm">{addError}</div>}
+          </form>
+        )}
         <h3 className="text-xl font-semibold mb-4">Liste des expositions</h3>
         {isLoading ? (
           <div>Chargement...</div>
