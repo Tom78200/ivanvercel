@@ -34,7 +34,7 @@ export default function AdminExpoImages() {
   const [error, setError] = useState("");
   const [images, setImages] = useState<{ url: string; caption: string }[]>([]);
   const [addForm, setAddForm] = useState({ caption: "" });
-  const [addFile, setAddFile] = useState<File | null>(null);
+  const [addFiles, setAddFiles] = useState<File[]>([]);
   const [addError, setAddError] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -57,41 +57,47 @@ export default function AdminExpoImages() {
     e.preventDefault();
     setIsAdding(true);
     setAddError("");
-    if (!addFile) {
-      setAddError("Veuillez sélectionner une image.");
+    if (addFiles.length === 0) {
+      setAddError("Veuillez sélectionner au moins une image.");
       setIsAdding(false);
       return;
     }
-    const data = new FormData();
-    data.append("image", addFile);
-    const uploadRes = await fetch("/api/upload", {
-      method: "POST",
-      body: data
-    });
-    if (!uploadRes.ok) {
-      const err = await uploadRes.json();
-      setAddError(err.error || "Erreur lors de l'upload de l'image.");
+    try {
+      const uploadedImages: { url: string; caption: string }[] = [];
+      for (const file of addFiles) {
+        const data = new FormData();
+        data.append("image", file);
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: data
+        });
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json();
+          throw new Error(err.error || `Erreur lors de l'upload de l'image ${file.name}.`);
+        }
+        const uploadData = await uploadRes.json();
+        uploadedImages.push({ url: uploadData.imageUrl, caption: addForm.caption || "" });
+      }
+
+      const newImages = [...images, ...uploadedImages];
+      const res = await fetch(`/api/exhibitions/${expoId}/gallery`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newImages)
+      });
+      if (!res.ok) {
+        setAddError("Erreur lors de l'ajout des images à la galerie.");
+      } else {
+        setImages(newImages);
+        setAddForm({ caption: "" });
+        setAddFiles([]);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    } catch (err: any) {
+      setAddError(err.message || "Erreur lors du traitement des images.");
+    } finally {
       setIsAdding(false);
-      return;
     }
-    const uploadData = await uploadRes.json();
-    const url = uploadData.imageUrl;
-    // Ajout dans la galerie
-    const newImages = [...images, { url, caption: addForm.caption }];
-    const res = await fetch(`/api/exhibitions/${expoId}/gallery`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newImages)
-    });
-    if (!res.ok) {
-      setAddError("Erreur lors de l'ajout de l'image à la galerie.");
-    } else {
-      setImages(newImages);
-      setAddForm({ caption: "" });
-      setAddFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-    setIsAdding(false);
   }
 
   async function handleDeleteImage(index: number) {
@@ -129,11 +135,11 @@ export default function AdminExpoImages() {
         <h2 className="text-3xl font-bold mb-4">Gérer les images de « {expo.title} »</h2>
         <button onClick={() => setLocation("/admin/expos")} className="mb-6 text-blue-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400" aria-label="Retour aux expositions admin">&larr; Retour aux expositions</button>
         <form onSubmit={handleAddImage} className="bg-white/10 rounded-xl p-6 mb-8 border border-white/20 flex flex-col gap-4">
-          <h3 className="text-xl font-semibold mb-2">Ajouter une image</h3>
-          <input name="imageFile" type="file" accept="image/*" ref={fileInputRef} onChange={e => setAddFile(e.target.files?.[0] || null)} className="p-2 rounded bg-white/20 text-white border border-white/30" required />
-          <input name="caption" value={addForm.caption} onChange={e => setAddForm(f => ({ ...f, caption: e.target.value }))} placeholder="Légende (facultatif)" className="p-2 rounded bg-white/20 text-white border border-white/30" />
-          <button type="submit" className="bg-green-500 hover:bg-green-600 text-white rounded p-2 font-semibold mt-2 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400" aria-label="Ajouter à la galerie" disabled={isAdding}>{isAdding ? "Ajout..." : "Ajouter à la galerie"}</button>
-          {addError && <div className="text-red-400 text-center mt-2">{addError}</div>}
+          <h3 className="text-xl font-semibold mb-2">Ajouter une ou plusieurs images</h3>
+          <input name="imageFile" type="file" accept="image/*" ref={fileInputRef} onChange={e => setAddFiles(Array.from(e.target.files || []))} className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" required multiple />
+          <input name="caption" value={addForm.caption} onChange={e => setAddForm(f => ({ ...f, caption: e.target.value }))} placeholder="Légende pour l'image ou les images (facultatif)" className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" />
+          <button type="submit" className="bg-green-500 hover:bg-green-600 text-white rounded p-2 font-semibold mt-2 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 text-sm sm:text-base" aria-label="Ajouter à la galerie" disabled={isAdding}>{isAdding ? "Ajout..." : "Ajouter à la galerie"}</button>
+          {addError && <div className="text-red-400 text-center mt-2 text-sm">{addError}</div>}
         </form>
         <h3 className="text-xl font-semibold mb-4">Images de la galerie</h3>
         {images.length === 0 ? (
