@@ -26,7 +26,7 @@ const upload = multer({
     if (file.mimetype.startsWith("image/")) cb(null, true);
     else cb(new Error("Seules les images sont autorisées"));
   },
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 15 * 1024 * 1024 },
 });
 
 async function uploadBufferToSupabase(originalName: string, mimeType: string, buffer: Buffer): Promise<string> {
@@ -68,15 +68,13 @@ async function deleteSupabasePublicFile(publicUrl: string): Promise<void> {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Seed admin en base si absent
+  // Configurer le premier admin si non existant (lazy seed)
   async function ensureAdminUser() {
     try {
-      const { data, error } = await supabase.from('users').select('id').limit(1);
-      if (error) return;
-      if (Array.isArray(data) && data.length > 0) return; // déjà présent
-      const rawPass = process.env.ADMIN_PASSWORD;
+      const { data: existing } = await supabase.from('users').select('id').limit(1);
+      if (existing && existing.length > 0) return;
+      const rawPass = process.env.ADMIN_PASSWORD || 'IvanGuthier2024!';
       const username = process.env.ADMIN_USERNAME || 'ivan';
-      if (!rawPass) return; // rien à seeder si pas de mdp fourni
       const hash = await bcrypt.hash(String(rawPass), 10);
       await supabase.from('users').insert({ username, password: hash });
       console.log(`[AUTH] Admin seed créé pour l'utilisateur '${username}'`);
@@ -117,6 +115,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Login error:', error);
       res.status(500).json({ error: "Internal server error" });
     }
+  });
+
+  // Get current user session
+  app.get("/api/me", (req, res) => {
+    if (req.session && (req.session as any).isAdmin) {
+      return res.json({
+        isAdmin: true,
+        adminUser: (req.session as any).adminUser
+      });
+    }
+    return res.json({ isAdmin: false });
   });
 
   // Logout route

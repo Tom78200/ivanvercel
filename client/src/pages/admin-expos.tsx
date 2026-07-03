@@ -32,7 +32,7 @@ export default function AdminExpos() {
 
   async function checkAuth() {
     try {
-      const res = await fetch('/api/me');
+      const res = await fetch('/api/me', { credentials: "include" });
       const me = await res.json();
       if (me?.isAdmin && me?.adminUser?.username === 'ivan') {
         setStep("dashboard");
@@ -68,6 +68,7 @@ export default function AdminExpos() {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username: "ivan", password })
       });
       if (res.ok) {
@@ -83,7 +84,7 @@ export default function AdminExpos() {
   };
 
   async function handleLogout() {
-    await fetch("/api/logout", { method: "POST" });
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
     setStep("auth");
     setPassword("");
   }
@@ -102,6 +103,7 @@ export default function AdminExpos() {
       data.append("image", fileInputRef.current.files[0]);
       const uploadRes = await fetch("/api/upload", {
         method: "POST",
+        credentials: "include",
         body: data
       });
       if (!uploadRes.ok) {
@@ -115,6 +117,7 @@ export default function AdminExpos() {
       const res = await fetch("/api/exhibitions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           ...form,
           imageUrl,
@@ -152,6 +155,7 @@ export default function AdminExpos() {
         data.append("image", file);
         const uploadRes = await fetch("/api/upload", {
           method: "POST",
+          credentials: "include",
           body: data
         });
         if (!uploadRes.ok) {
@@ -165,6 +169,7 @@ export default function AdminExpos() {
         const res = await fetch("/api/exhibitions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             title: cleanTitle,
             location: "Non spécifié",
@@ -196,7 +201,7 @@ export default function AdminExpos() {
   async function handleDeleteExpo(id: number) {
     if (!window.confirm("Supprimer cette exposition ?")) return;
     try {
-      const res = await fetch(`/api/exhibitions/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/exhibitions/${id}`, { method: "DELETE", credentials: "include" });
       if (res.ok) {
         setExpos(expos => expos.filter(e => e.id !== id));
       }

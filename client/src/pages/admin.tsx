@@ -28,6 +28,22 @@ export default function Admin() {
   const [addingImagesTo, setAddingImagesTo] = useState<number | null>(null);
   const [additionalImagesFile, setAdditionalImagesFile] = useState<FileList | null>(null);
 
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  async function checkAuth() {
+    try {
+      const res = await fetch('/api/me', { credentials: "include" });
+      const me = await res.json();
+      if (me?.isAdmin && me?.adminUser?.username === 'ivan') {
+        setStep("dashboard");
+      }
+    } catch (e) {
+      console.error("Check auth failed:", e);
+    }
+  }
+
   // Formulaire ajout
   const [form, setForm] = useState({
     title: "",
@@ -186,6 +202,7 @@ export default function Admin() {
     try {
       const response = await fetch(`/api/artworks/${artworkId}/additional-images`, {
         method: 'POST',
+        credentials: 'include',
         body: formData,
       });
 

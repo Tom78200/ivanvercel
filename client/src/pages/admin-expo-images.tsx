@@ -12,7 +12,7 @@ export default function AdminExpoImages() {
 
   async function checkAuth() {
     try {
-      const res = await fetch('/api/me');
+      const res = await fetch('/api/me', { credentials: "include" });
       const me = await res.json();
       if (me?.isAdmin && me?.adminUser?.username === 'ivan') {
         setIsAuthenticated(true);
@@ -40,7 +40,7 @@ export default function AdminExpoImages() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch(`/api/exhibitions/${expoId}`)
+    fetch(`/api/exhibitions/${expoId}`, { credentials: "include" })
       .then(res => res.json())
       .then(data => {
         setExpo(data);
@@ -69,6 +69,7 @@ export default function AdminExpoImages() {
         data.append("image", file);
         const uploadRes = await fetch("/api/upload", {
           method: "POST",
+          credentials: "include",
           body: data
         });
         if (!uploadRes.ok) {
@@ -83,6 +84,7 @@ export default function AdminExpoImages() {
       const res = await fetch(`/api/exhibitions/${expoId}/gallery`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(newImages)
       });
       if (!res.ok) {
@@ -106,6 +108,7 @@ export default function AdminExpoImages() {
     const res = await fetch(`/api/exhibitions/${expoId}/gallery`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(newImages)
     });
     if (res.ok) setImages(newImages);
