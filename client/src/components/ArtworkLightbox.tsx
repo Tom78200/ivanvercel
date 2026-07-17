@@ -4,6 +4,13 @@ import { X } from "lucide-react";
 import type { Artwork } from "@shared/schema";
 import TranslatedText from "@/components/TranslatedText";
 
+const EMPTY_DETAIL = ['non spécifiée', 'non spécifiées', 's.d.', 'n/a', 'nc', '-'];
+function hasDetailValue(v?: string | null): boolean {
+  if (v == null) return false;
+  const t = v.trim().toLowerCase();
+  return t.length > 0 && !EMPTY_DETAIL.includes(t);
+}
+
 interface ArtworkLightboxProps {
   artwork: Artwork | null;
   isOpen: boolean;
@@ -213,14 +220,18 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
                       <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-playfair mb-1 sm:mb-2 will-change-transform">
                         <TranslatedText text={artwork.title} />
                       </h3>
-                      <p className="text-sm sm:text-base md:text-lg opacity-80 will-change-transform">
-                        <TranslatedText text={`${artwork.technique}`} /> • {artwork.dimensions} • {artwork.year}
-                      </p>
+                      {[artwork.technique, artwork.dimensions, artwork.year].filter(hasDetailValue).length > 0 && (
+                        <p className="text-sm sm:text-base md:text-lg opacity-80 will-change-transform">
+                          <TranslatedText text={[artwork.technique, artwork.dimensions, artwork.year].filter(hasDetailValue).join(' • ')} />
+                        </p>
+                      )}
                     </div>
                     {/* Description cachée sur mobile */}
-                    <div className="text-right text-sm sm:text-base max-w-md hidden md:block opacity-70 will-change-transform">
-                      <p className="line-clamp-2"><TranslatedText text={artwork.description || ''} /></p>
-                    </div>
+                    {hasDetailValue(artwork.description) && (
+                      <div className="text-right text-sm sm:text-base max-w-md hidden md:block opacity-70 will-change-transform">
+                        <p className="line-clamp-2"><TranslatedText text={artwork.description || ''} /></p>
+                      </div>
+                    )}
                   </>
                 )}
               </div>

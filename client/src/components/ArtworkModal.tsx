@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
 import type { Artwork } from '@shared/schema';
 
+const EMPTY_DETAIL = ['non spécifiée', 'non spécifiées', 's.d.', 'n/a', 'nc', '-'];
+function hasDetailValue(v?: string | null): boolean {
+  if (v == null) return false;
+  const t = v.trim().toLowerCase();
+  return t.length > 0 && !EMPTY_DETAIL.includes(t);
+}
+
 interface ArtworkModalProps {
   artwork: Artwork | null;
   isOpen: boolean;
@@ -106,31 +113,35 @@ export default function ArtworkModal({ artwork, isOpen, onClose }: ArtworkModalP
           {/* Details Section */}
           <div className="lg:w-1/3 p-6 bg-gray-50">
             <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Technique</h3>
-                <p className="text-gray-700">{artwork.technique}</p>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-1">Année</h3>
-                <p className="text-gray-700">{artwork.year}</p>
-              </div>
-              
-              {artwork.dimensions && (
+              {hasDetailValue(artwork.technique) && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Technique</h3>
+                  <p className="text-gray-700">{artwork.technique}</p>
+                </div>
+              )}
+
+              {hasDetailValue(artwork.year) && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Année</h3>
+                  <p className="text-gray-700">{artwork.year}</p>
+                </div>
+              )}
+
+              {hasDetailValue(artwork.dimensions) && (
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Dimensions</h3>
                   <p className="text-gray-700">{artwork.dimensions}</p>
                 </div>
               )}
-              
-              {artwork.category && (
+
+              {hasDetailValue(artwork.category) && (
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Catégorie</h3>
                   <p className="text-gray-700">{artwork.category}</p>
                 </div>
               )}
-              
-              {artwork.description && (
+
+              {hasDetailValue(artwork.description) && (
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Description</h3>
                   <p className="text-gray-700">{artwork.description}</p>

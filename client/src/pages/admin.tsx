@@ -188,7 +188,7 @@ export default function Admin() {
     }
   }
 
-  const canSubmit = Boolean(form.title && form.technique && form.year && form.imageFile && (form.category || '').trim());
+  const canSubmit = Boolean(form.title && form.imageFile && (form.category || '').trim());
 
   // Fonction pour ajouter des images supplémentaires
   async function handleAddAdditionalImages(artworkId: number) {
@@ -385,8 +385,8 @@ export default function Admin() {
           <form onSubmit={handleAddArtwork} className="bg-white/10 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 border border-white/20 flex flex-col gap-3 sm:gap-4">
             <h3 className="text-lg sm:text-xl font-semibold mb-2">Ajouter une œuvre</h3>
             <input name="title" value={form.title} onChange={handleFormChange} placeholder="Titre*" className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" required />
-            <input name="technique" value={form.technique} onChange={handleFormChange} placeholder="Technique*" className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" required />
-            <input name="year" value={form.year} onChange={handleFormChange} placeholder="Année*" className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" required />
+            <input name="technique" value={form.technique} onChange={handleFormChange} placeholder="Technique (facultatif)" className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" />
+            <input name="year" value={form.year} onChange={handleFormChange} placeholder="Année (facultatif)" className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" />
             <input name="dimensions" value={form.dimensions} onChange={handleFormChange} placeholder="Dimensions" className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" />
             <textarea name="description" value={form.description} onChange={handleFormChange} placeholder="Description" className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base" rows={2} />
             <select name="category" value={form.category} onChange={handleFormChange} className="p-2 rounded bg-white/20 text-white border border-white/30 text-sm sm:text-base">

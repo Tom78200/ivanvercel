@@ -1,4 +1,7 @@
 export const ARTWORK_CATEGORIES: string[] = [
+  "Aquarelle",
+  "Peinture",
+  "Technique mixte",
   "Portrait",
   "Paysage",
   "Abstraction",
