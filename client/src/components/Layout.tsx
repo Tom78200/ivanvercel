@@ -36,13 +36,10 @@ export default function Layout({ children }: LayoutProps) {
           "url": "https://www.ivangauthier.com/",
           "image": "https://www.ivangauthier.com/generated-icon.png",
           "description": "Artiste peintre contemporain expressionniste et figuratif. Expositions en France et sur tous les continents depuis l'âge de 16 ans.",
-          "birthDate": "2000-03-01",
-          "birthPlace": "Beregovo, Ukraine",
           "nationality": "Français",
           "knowsAbout": ["Peinture contemporaine", "Art expressionniste", "Art figuratif", "Expositions d'art"],
           "sameAs": [
-            "https://instagram.com",
-            "https://facebook.com"
+            "https://www.instagram.com/ivan_gauthier.art/"
           ],
           "hasOccupation": {
             "@type": "Occupation",

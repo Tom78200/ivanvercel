@@ -5,7 +5,7 @@ import { Helmet } from "react-helmet-async";
 import TranslatedText from "@/components/TranslatedText";
 
 const socialLinks = [
-  { icon: Instagram, href: "https://instagram.com", label: "Instagram", color: "hover:text-pink-400" },
+  { icon: Instagram, href: "https://www.instagram.com/ivan_gauthier.art/", label: "Instagram", color: "hover:text-pink-400" },
 ];
 
 type Page = {
