@@ -1,172 +1,64 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { Instagram, Facebook, X } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { motion } from "framer-motion";
+import { Instagram, Facebook } from "lucide-react";
 import { Helmet } from "react-helmet-async";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useAutoTranslation } from "@/hooks/useAutoTranslation";
+import TranslatedText from "@/components/TranslatedText";
 
-interface Photo {
-  url: string;
-  position: string;
-  size: string;
-  caption?: string;
-}
+const socialLinks = [
+  { icon: Instagram, href: "https://instagram.com", label: "Instagram", color: "hover:text-pink-400" },
+  { icon: Facebook, href: "https://facebook.com", label: "Facebook", color: "hover:text-blue-400" },
+];
 
-interface StepPhotos {
-  [key: number]: Photo[];
-}
+const sections: { title?: string; paragraphs: string[] }[] = [
+  {
+    title: "Introduction",
+    paragraphs: [
+      "Ivan Gauthier ? Une rencontre artistique et humaine. Retrouvant dans l'homme toute la sensibilité et la fragilité de ses œuvres, et inversement. Ivan fait partie de ces artistes dont on peut être bien entendu touché directement, simplement par ses œuvres, mais dont la connaissance du parcours, la rencontre avec l'artiste, et l'explication de son intention donnent des clés de lecture et permettent de plus encore d'en apprécier les œuvres. Ivan Gauthier est jeune par son âge, mais surprenant de maturité tant artistique qu'émotionnelle, humaine…",
+      "Artiste autodidacte, il porte en lui un bagage personnel et émotionnel puissant dont témoignent autant sa singularité artistique que son tempérament. Vous ne serez donc pas étonné(e) d'apprendre que ces personnages qu'il peint ont tous une part d'autoportrait…",
+    ],
+  },
+  {
+    title: "L'éveil artistique et la richesse culturelle",
+    paragraphs: [
+      "D'origine ukrainienne, orphelin, il y est adopté et arrive en France à l'âge de 3 ans. Il grandit dans la région lilloise, et toute sa dichotomie, son contraste : entre richesse tant culturelle qu'économique du Nord, et les défis sociaux, ouvriers, qui y persistent. Ivan se forge dans un milieu populaire empreint de tristesse et de pauvreté, qui a exacerbé sa sensibilité artistique.",
+      "Dès l'enfance, Ivan ressent le besoin impérieux de s'exprimer à travers le dessin, en particulier, mais aussi le théâtre et la musique. « Mon impulsion artistique trouve ses racines dans l'environnement lourd de mon enfance, marquée par des épisodes psychologiquement difficiles. J'avais un profond désir de ne pas ressembler à ce que je voyais autour de moi ». L'Art devient très tôt autant son refuge que son moyen « d'Être ».",
+      "Ses parents jouent un rôle déterminant dans son épanouissement artistique. Son père, passionné d'archéologie et d'histoire naturelle, et sa mère, restauratrice d'objets d'art. Ils lui offrent un accès privilégié à la culture, et un soutien inconditionnel dans sa pratique de l'Art, des Arts. Ceci lui permettra de surmonter les moments difficiles, d'accepter l'échec comme une étape vers la réussite, mais aussi l'armera d'une détermination à Vivre, à exister, à Être… Car sa singularité le confronte au rejet des autres, et en particulier de ses pairs. À l'école, ou plus largement du milieu ouvrier où il évolue.",
+    ],
+  },
+  {
+    title: "Ivan Gauthier à Paris : entre perdition et découverte",
+    paragraphs: [
+      "Très jeune, Ivan Gauthier comprend que son avenir personnel, et artistique, est ailleurs… et en l'occurrence à Paris. Il s'y rend une première fois à 16 ans, déterminé, pour s'y installer définitivement à 19 ans.",
+      "Il s'y nourrit bien entendu de l'effervescence et de la richesse culturelle des expositions, musées, galeries, mais aussi son amour pour des figures emblématiques comme Victor Hugo et Arthur Rimbaud. Il explore également le monde de la mode, de la création, et du théâtre, aux cours au Cours Florent. Insatiable… Il y fait aussi de nombreuses rencontres, qu'elles soient artistiques, professionnelles ou personnelles. Grâce à cela il vend ses premières œuvres et se construit un tissu relationnel qui lui ouvre les portes d'une élite qu'il fréquente. Il organise des dîners chez lui pour y recevoir amateurs d'Art, collectionneurs, et il vend à peu près tout ce qu'il produit. « Je n'ai pas fait que de belles rencontres… Je m'y suis aussi perdu, égaré, trompé, grisé, et y ai aussi souffert. Surtout dans ma vie personnelle ». Ivan Gauthier est dans une quête perpétuelle d'amour, et de reconnaissance. De sa personnalité, du jeune homme qu'il est, et de l'artiste. Pendant ce temps, et grâce à cette détermination qui le caractérise, et parce que ses œuvres séduisent, touchent, il se fait une place, entre en galeries, et surtout dans des collections privées… avec une volonté de liberté et de sincérité de créer.",
+    ],
+  },
+  {
+    title: "Le style, les œuvres d'Ivan Gauthier",
+    paragraphs: [],
+  },
+  {
+    title: "Son univers",
+    paragraphs: [
+      "Le talent d'Ivan Gauthier est le fruit de ce que la vie lui a offert, et aiguisé : sa sensibilité humaine. Son art capture le contraste entre ce qui est offert au regard, et la vérité qu'elle dissimule, qu'il ressent. Telle la mélancolie des visages qu'il peint, et l'éclat des couleurs vives, révélant un paradoxe saisissant. Sa sensibilité exacerbée lui permet de \"voir\" au-delà des apparences. Il ne cherche pas en fait à créer de l'émotion, mais à la faire apparaître. « Je ne suis pas différent des autres même si c'est ce que l'on m'a fait ressentir. Car, tous, nous sommes revêtus d'un paraître plus ou moins prononcé masquant l'Être. Et ce sont bien souvent les personnes les plus malheureuses qui sont les plus chatoyantes ». Raison pour laquelle chacun de ses portraits est imprégné d'une part de lui-même, comme ses sourcils… L'art pour Ivan est un moyen de se rapprocher des autres, dans tous les sens du terme. Un lien, une expérience partagée avec ceux qui observent ses créations. « Plus les gens apprécient mon travail, plus je me sens inspiré, déterminé à peindre ». Pour lui, l'art est une manière de voir et d'être vu, un moyen de communiquer sa vision sensible du monde humain.",
+    ],
+  },
+  {
+    title: "Le style d'Ivan Gauthier",
+    paragraphs: [
+      "L'œuvre d'Ivan Gauthier oscille entre la spontanéité du trait du dessin, brut, impulsif, et une figuration plus étudiée, méticuleuse en peinture sur toile. S'il lui arrive d'explorer le champ des possibles du paysage, de la nature morte, le portrait reste son sujet de prédilection. Mais quelle que soit l'œuvre, le sujet, le support, son style est éminemment reconnaissable, ce qui témoigne d'une puissance et d'une maturité artistique rares pour un si jeune artiste…",
+      "Outre le trait, et le style très particulier de ces visages, Ivan se reconnaît à sa palette de peintures. Vive, intense. « Peut-être, probablement même, parce que j'ai peur du noir… mais aussi parce que je suis daltonien ». Pour autant Ivan explore la palette des bleus, et en particulier en s'inspirant du bleu de Prusse et de la nuit étoilée de Kees Van Dongen, qui a été une de ses premières grandes émotions artistiques. Outre les couleurs, les motifs des vêtements relèvent de son goût pour la mode, les tissus, les imprimés. Toujours dans cette intention de créer le contraste entre le vêtement et ce qu'il habille… à commencer par ces regards qu'il sait si bien faire « parler » et en révéler la vérité…",
+    ],
+  },
+  {
+    title: "Conclusion : un talent bouillonnant…",
+    paragraphs: [
+      "Ivan Gauthier est un Artiste auquel nous mettons une majuscule sans hésiter. Pour le niveau artistique, le tempérament, la maturité, le parcours. Et pourtant si jeune, et 280 œuvres à son actif qui sont pour la très grande majorité au sein de collections d'amateurs d'Art avertis. Son énergie sert sa détermination et inversement. Avide d'Art, d'émotion, de sensibilité, mais aussi séducteur au sens « dandy » du terme… Ivan Gauthier est un jeune homme très cultivé, doté d'excellentes manières et doué d'une éloquence devenue rare pour sa génération. Ce qui le rend étonnant, surprenant, et pour le moins captivant, à l'image de sa peinture. Bouillonnant ? Par les envies de création qui l'habitent, comme récemment où il a jeté son dévolu sur la photographie, que nous serons bientôt heureux de vous présenter aussi.",
+    ],
+  },
+];
 
-// Tirage aléatoire d'œuvres depuis l'API publique
-function shuffleArray<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
+const ambiancePhotos = ["/images/about/photo-2.jpg", "/images/about/photo-3.jpg", "/images/about/photo-4.jpg"];
 
 export default function About() {
-  const [isRevealed, setIsRevealed] = useState(false);
-  const [step, setStep] = useState(0);
-  const [showFullBio, setShowFullBio] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [orbitArtworks, setOrbitArtworks] = useState<{ url: string; title: string }[]>([]);
-  const { t } = useLanguage();
-  const isMobile = useIsMobile();
-  
-  // Traductions automatiques
-  const { translatedText: translatedBirthText } = useAutoTranslation("D'origine ukrainienne, orphelin, il est adopté et arrive en France à l'âge de 3 ans. Il grandit dans la région lilloise, entre richesse culturelle et défis sociaux, dans un milieu populaire qui a exacerbé sa sensibilité artistique. Dès l'enfance, Ivan ressent le besoin impérieux de s'exprimer à travers le dessin, mais aussi le théâtre et la musique.");
-  const { translatedText: translatedJourneyTitle } = useAutoTranslation("Mon parcours");
-  const { translatedText: translatedJourneyText } = useAutoTranslation("Très jeune, Ivan comprend que son avenir est ailleurs, à Paris. Il s'y rend une première fois à 16 ans, déterminé, pour s'y installer définitivement à 19 ans. Il s'y nourrit de l'effervescence des expositions, des musées, des galeries, explore la mode et le théâtre au Cours Florent, vend ses premières œuvres et se construit un tissu relationnel qui lui ouvre les portes d'une élite qu'il fréquente.");
-  const { translatedText: translatedArtTitle } = useAutoTranslation("Mon art");
-  const { translatedText: translatedArtText } = useAutoTranslation("L'œuvre d'Ivan Gauthier oscille entre la spontanéité du trait, brut et impulsif, et une figuration plus étudiée en peinture sur toile. Le portrait reste son sujet de prédilection. Sa palette, vive et intense, explore en particulier le bleu de Prusse. Chacun de ses portraits est imprégné d'une part de lui-même, révélant la mélancolie des visages qu'il peint et l'éclat des couleurs vives, dans un paradoxe saisissant.");
-  const { translatedText: translatedClickHint } = useAutoTranslation("Cliquez pour découvrir");
-
-  useEffect(() => {
-    // Charger des œuvres publiques et en sélectionner aléatoirement 6 pour l'orbite
-    fetch('/api/artworks')
-      .then(r => r.ok ? r.json() : [])
-      .then((list: any[]) => {
-        const pool = (list || []).map(a => ({ url: a.imageUrl as string, title: a.title as string })).filter(a => !!a.url);
-        const picked = shuffleArray(pool).slice(0, 6);
-        if (picked.length > 0) setOrbitArtworks(picked);
-      })
-      .catch(() => {});
-  }, []);
-
-  const socialLinks = [
-    { icon: Instagram, href: "https://instagram.com", label: "Instagram", color: "hover:text-pink-400" },
-    { icon: Facebook, href: "https://facebook.com", label: "Facebook", color: "hover:text-blue-400" },
-  ];
-
-  const stepPhotos: StepPhotos = {
-    1: [
-      {
-        url: "https://images.pexels.com/photos/1918290/pexels-photo-1918290.jpeg",
-        position: "-top-32 -left-24 rotate-[-8deg]",
-        size: "w-48 h-64"
-      },
-      {
-        url: "https://images.pexels.com/photos/1918291/pexels-photo-1918291.jpeg",
-        position: "top-40 -right-24 rotate-[5deg]",
-        size: "w-40 h-56"
-      }
-    ],
-    2: [
-      {
-        url: "https://images.pexels.com/photos/1916819/pexels-photo-1916819.jpeg",
-        position: "-top-20 -left-32 rotate-[-12deg]",
-        size: "w-48 h-64",
-        caption: "Danse"
-      },
-      {
-        url: "https://images.pexels.com/photos/7577331/pexels-photo-7577331.jpeg",
-        position: "top-1/2 -right-28 -translate-y-1/2 rotate-[8deg]",
-        size: "w-44 h-60",
-        caption: "Théâtre"
-      },
-      {
-        url: "https://images.pexels.com/photos/4348096/pexels-photo-4348096.jpeg",
-        position: "bottom-0 -left-36 rotate-[15deg]",
-        size: "w-40 h-56",
-        caption: "Piano"
-      }
-    ],
-    3: [
-      {
-        url: "https://images.pexels.com/photos/6330644/pexels-photo-6330644.jpeg",
-        position: "-top-20 -left-32 rotate-[-8deg]",
-        size: "w-48 h-64",
-        caption: "Peinture"
-      },
-      {
-        url: "https://images.pexels.com/photos/6847584/pexels-photo-6847584.jpeg",
-        position: "top-1/2 -right-28 -translate-y-1/2 rotate-[5deg]",
-        size: "w-44 h-60",
-        caption: "Dessin"
-      },
-      {
-        url: "https://images.pexels.com/photos/3844791/pexels-photo-3844791.jpeg",
-        position: "bottom-0 -left-36 rotate-[-10deg]",
-        size: "w-48 h-64",
-        caption: "Exposition"
-      }
-    ]
-  };
-
-  const steps = [
-    {
-      question: t('about.bio'),
-      hint: translatedClickHint
-    },
-    {
-      title: "Ivan Gauthier",
-      subtitle: t('home.subtitle'),
-      text: translatedBirthText
-    },
-    {
-      title: translatedJourneyTitle,
-      text: translatedJourneyText
-    },
-    {
-      title: translatedArtTitle,
-      text: translatedArtText
-    }
-  ];
-
-  const fullBiography = `
-    « Quand vous marchez dans la rue les femmes les plus malheureuses sont les plus décorées… »
-
-    D'origine ukrainienne, orphelin, il est adopté et arrive en France à l'âge de 3 ans. Il grandit dans la région lilloise, entre richesse culturelle et économique du Nord et les défis sociaux, ouvriers, qui y persistent. Ivan se forge dans un milieu populaire empreint de tristesse et de pauvreté, qui a exacerbé sa sensibilité artistique.
-
-    Dès l'enfance, Ivan ressent le besoin impérieux de s'exprimer à travers le dessin, en particulier, mais aussi le théâtre et la musique. Ses parents jouent un rôle déterminant dans son épanouissement artistique : son père, passionné d'archéologie et d'histoire naturelle, et sa mère, restauratrice d'objets d'art, lui offrent un accès privilégié à la culture et un soutien inconditionnel dans sa pratique de l'Art.
-
-    Très jeune, Ivan comprend que son avenir personnel et artistique est ailleurs, à Paris. Il s'y rend une première fois à 16 ans, déterminé, pour s'y installer définitivement à 19 ans. Il s'y nourrit de l'effervescence et de la richesse culturelle des expositions, musées, galeries, explore le monde de la mode et du théâtre au Cours Florent. Il y vend ses premières œuvres et se construit un tissu relationnel qui lui ouvre les portes d'une élite qu'il fréquente, organisant des dîners chez lui pour y recevoir amateurs d'Art et collectionneurs.
-
-    L'œuvre d'Ivan Gauthier oscille entre la spontanéité du trait du dessin, brut, impulsif, et une figuration plus étudiée, méticuleuse en peinture sur toile. S'il lui arrive d'explorer le paysage ou la nature morte, le portrait reste son sujet de prédilection. Sa palette, vive et intense, explore en particulier le bleu de Prusse et la nuit étoilée de Kees Van Dongen, une de ses premières grandes émotions artistiques. Les motifs des vêtements relèvent de son goût pour la mode et les tissus, toujours dans l'intention de créer un contraste entre le vêtement et ce qu'il habille.
-
-    Artiste auquel on met une majuscule sans hésiter, Ivan Gauthier compte déjà 280 œuvres à son actif, pour la très grande majorité au sein de collections d'amateurs d'Art avertis. Avide d'Art, d'émotion et de sensibilité, il est aujourd'hui l'un des jeunes artistes à suivre absolument.
-  `;
-  const mobileBiography = `
-    D'origine ukrainienne, orphelin, Ivan est adopté et arrive en France à l'âge de 3 ans. Il grandit dans la région lilloise, dans un milieu populaire qui exacerbe sa sensibilité artistique. Dès l'enfance, il ressent le besoin de s'exprimer à travers le dessin, le théâtre et la musique.
-
-    Très jeune, il comprend que son avenir est à Paris. Il s'y rend à 16 ans, puis s'y installe définitivement à 19 ans, où il vend ses premières œuvres et se construit un tissu relationnel qui lui ouvre les portes d'une élite qu'il fréquente.
-
-    Son œuvre oscille entre la spontanéité du dessin, brut et impulsif, et une figuration plus étudiée en peinture sur toile. Le portrait reste son sujet de prédilection, avec une palette vive et intense inspirée notamment du bleu de Prusse.
-
-    Avec déjà 280 œuvres à son actif, pour la plupart au sein de collections d'amateurs avertis, Ivan Gauthier est aujourd'hui l'un des jeunes artistes à suivre absolument.
-  `;
-  const effectiveFullBiography = isMobile ? mobileBiography : fullBiography;
-
-  const handleNext = () => {
-    if (step < steps.length - 1) {
-      setStep(step + 1);
-    }
-  };
-
   return (
     <>
       <Helmet>
@@ -216,260 +108,97 @@ export default function About() {
           }
         `}</script>
       </Helmet>
-      <div className="min-h-screen bg-black pt-16 md:pt-24">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="relative min-h-[80vh] flex items-center justify-center">
-            {/* Animation circulaire des œuvres (retirée localement) */}
 
-            {/* Cube interactif initial */}
-            {!isRevealed && (
+      <div className="min-h-screen bg-black pt-20 sm:pt-24 md:pt-28 pb-24">
+        <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* En-tête */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            className="flex flex-col items-center text-center mb-12 sm:mb-16"
+          >
+            <div className="w-40 h-52 sm:w-48 sm:h-64 rounded-xl overflow-hidden border border-white/10 shadow-2xl mb-6">
+              <img
+                src="/images/about/portrait.jpg"
+                alt="Portrait d'Ivan Gauthier, artiste peintre contemporain"
+                className="w-full h-full object-cover"
+                loading="eager"
+                width="600"
+                height="800"
+              />
+            </div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-playfair text-white tracking-wide">Ivan Gauthier</h1>
+            <p className="text-white/60 mt-2 text-sm sm:text-base tracking-[0.2em] uppercase">Artiste Peintre Contemporain</p>
+
+            <blockquote className="mt-8 max-w-2xl text-lg sm:text-xl md:text-2xl font-playfair italic text-white/80 leading-relaxed">
+              « Quand vous marchez dans la rue les femmes les plus malheureuses sont les plus décorées… »
+            </blockquote>
+
+            <div className="mt-8 flex justify-center gap-6">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-white/60 hover:text-white transition-colors ${social.color}`}
+                  aria-label={social.label}
+                >
+                  <social.icon className="w-6 h-6" />
+                </a>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Texte biographique */}
+          <div className="prose prose-invert prose-lg max-w-none">
+            {sections.map((section, si) => (
               <motion.div
-                className="relative cursor-pointer"
-                onClick={() => setIsRevealed(true)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                key={si}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-10%" }}
+                transition={{ duration: 0.6 }}
+                className="mb-10 sm:mb-12"
               >
-                <div className="w-64 h-64 relative transform-gpu preserve-3d animate-float">
-                  <motion.div 
-                    className="absolute inset-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl flex items-center justify-center text-center p-8 shadow-2xl"
-                    initial={{ rotateY: 0 }}
-                    animate={{ rotateY: [0, 10, -10, 0] }}
-                    transition={{
-                      duration: 4,
-                      repeat: Infinity,
-                      repeatType: "reverse",
-                      ease: "easeInOut"
-                    }}
-                  >
-                    <div>
-                      <h2 className="text-3xl font-playfair text-white mb-4">{steps[0].question}</h2>
-                      <p className="text-white/60 text-sm">{steps[0].hint}</p>
-                    </div>
-                  </motion.div>
-                </div>
-              </motion.div>
-            )}
+                {section.title && (
+                  <h2 className="text-2xl sm:text-3xl font-playfair text-white mb-4 sm:mb-6">
+                    {section.title}
+                  </h2>
+                )}
+                {section.paragraphs.map((p, pi) => (
+                  <p key={pi} className="text-base sm:text-lg text-white/75 leading-relaxed mb-4 sm:mb-5">
+                    <TranslatedText text={p} />
+                  </p>
+                ))}
 
-            {/* Contenu révélé */}
-            <AnimatePresence mode="wait">
-              {isRevealed && (
-                <div className="w-full">
-                  {/* Rideau qui se lève */}
-                  <motion.div
-                    className="fixed inset-0 bg-black origin-top"
-                    initial={{ scaleY: 1 }}
-                    animate={{ scaleY: 0 }}
-                    transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                  />
-
-                  <div className="grid lg:grid-cols-2 gap-16 items-start">
-                    {/* Portrait principal */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.8, delay: 0.5 }}
-                      className="sticky top-20"
-                    >
-                      <div className="aspect-[3/4] rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-                        <img
-                          src="/images/about/portrait.jpg"
-                          alt="Portrait d'Ivan Gauthier, artiste peintre contemporain"
-                          className="w-full h-full object-cover"
-                          loading="eager"
-                          width="600"
-                          height="800"
-                        />
-                      </div>
-
-                      {/* Photos d'ambiance */}
-                      <div className="mt-6 grid grid-cols-3 gap-3">
-                        {["/images/about/photo-2.jpg", "/images/about/photo-3.jpg", "/images/about/photo-4.jpg"].map((src, i) => (
-                          <motion.div
-                            key={src}
-                            className="aspect-square rounded-lg overflow-hidden border border-white/10"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.7 + i * 0.1 }}
-                          >
-                            <img
-                              src={src}
-                              alt={`Ivan Gauthier - photo ${i + 2}`}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          </motion.div>
-                        ))}
-                      </div>
-
-                      {/* Social Links */}
-                      <motion.div 
+                {/* Photos d'ambiance intercalées après "Ivan Gauthier à Paris" */}
+                {si === 2 && (
+                  <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-6 sm:mt-8">
+                    {ambiancePhotos.map((src, i) => (
+                      <motion.div
+                        key={src}
+                        className="aspect-[3/4] rounded-lg overflow-hidden border border-white/10"
                         initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 1 }}
-                        className="mt-8 flex justify-center gap-6"
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: i * 0.1 }}
                       >
-                        {socialLinks.map((social) => (
-                          <a
-                            key={social.label}
-                            href={social.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`text-white/60 hover:text-white transition-colors ${social.color}`}
-                          >
-                            <social.icon className="w-6 h-6" />
-                          </a>
-                        ))}
+                        <img
+                          src={src}
+                          alt={`Ivan Gauthier - photo ${i + 2}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
                       </motion.div>
-                    </motion.div>
-
-                    {/* Contenu textuel et photos d'ambiance */}
-                    <div className="relative">
-                      {/* Navigation des étapes */}
-                      <div className="flex space-x-2 mb-8">
-                        {steps.slice(1).map((_, index) => (
-                          <motion.button
-                            key={index}
-                            onClick={() => setStep(index + 1)}
-                            className={`w-2 h-2 rounded-full transition-colors ${step === index + 1 ? "bg-white" : "bg-white/20"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400`}
-                            aria-label={`Aller à l'étape ${index + 1}`}
-                            whileHover={{ scale: 1.2 }}
-                            whileTap={{ scale: 0.9 }}
-                          />
-                        ))}
-                      </div>
-
-                      {/* Contenu de l'étape actuelle */}
-                      <div className="mb-16">
-                        <AnimatePresence mode="wait">
-                          <motion.div
-                            key={step}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.5 }}
-                          >
-                            {step === 0 ? (
-                              <div className="text-center">
-                                <h2 className="text-4xl font-playfair text-white mb-6">
-                                  {steps[0].question}
-                                </h2>
-                                <p className="text-lg text-white/70">
-                                  {steps[0].hint}
-                                </p>
-                              </div>
-                            ) : (
-                              <>
-                                <h2 className="text-4xl font-playfair text-white mb-6">
-                                  {steps[step]?.title}
-                                </h2>
-                                {steps[step]?.subtitle && (
-                                  <h3 className="text-xl text-white/80 mb-6">
-                                    {steps[step].subtitle}
-                                  </h3>
-                                )}
-                                {/* Lien œuvres phares retiré */}
-                                <p className="text-lg text-white/70 leading-relaxed">
-                                  {steps[step]?.text}
-                                </p>
-
-                                {step === steps.length - 1 && (
-                                  <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="mt-8"
-                                  >
-                                    <motion.button
-                                      onClick={() => setShowFullBio(true)}
-                                      className="w-full px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-300 border border-white/20 hover:border-white/40 text-lg font-medium tracking-wide shadow-lg hover:shadow-xl backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                                      aria-label="Voir la biographie entière"
-                                      whileHover={{ scale: 1.02 }}
-                                      whileTap={{ scale: 0.98 }}
-                                    >
-                                      Voir la biographie entière
-                                    </motion.button>
-                                  </motion.div>
-                                )}
-                              </>
-                            )}
-
-                            <div className="mt-8 flex justify-center">
-                              {step > 0 && (
-                                <motion.button
-                                  onClick={() => setStep(step - 1)}
-                                  className="text-white/60 hover:text-white transition-colors mr-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                                  aria-label="Étape précédente"
-                                  whileHover={{ x: -5 }}
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  ← Précédent
-                                </motion.button>
-                              )}
-                              {step < steps.length - 1 && (
-                                <motion.button
-                                  onClick={handleNext}
-                                  className="text-white/60 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                                  aria-label="Étape suivante"
-                                  whileHover={{ x: 5 }}
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  Suivant →
-                                </motion.button>
-                              )}
-                            </div>
-                          </motion.div>
-                        </AnimatePresence>
-                      </div>
-
-                      {/* Bloc photos d'ambiance retiré à la demande (plus aucune image supplémentaire) */}
-                    </div>
+                    ))}
                   </div>
-                </div>
-              )}
-            </AnimatePresence>
+                )}
+              </motion.div>
+            ))}
           </div>
         </div>
-
-        {/* Modal Biographie complète */}
-        <AnimatePresence>
-          {showFullBio && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center overflow-y-auto"
-              onClick={() => setShowFullBio(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                className="relative max-w-3xl mx-auto p-8 my-12"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <motion.button
-                  onClick={() => setShowFullBio(false)}
-                  className="absolute top-0 right-0 p-4 text-white/60 hover:text-white"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <X size={24} />
-                </motion.button>
-                <div className="prose prose-lg prose-invert max-w-none">
-                  {effectiveFullBiography.split('\n\n').map((paragraph, index) => (
-                    <motion.p
-                      key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="mb-6 text-lg text-white/80 leading-relaxed"
-                    >
-                      {paragraph}
-                    </motion.p>
-                  ))}
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </>
   );

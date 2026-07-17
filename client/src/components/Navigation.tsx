@@ -40,9 +40,9 @@ export default function Navigation() {
         className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/30 to-transparent backdrop-blur-sm hidden md:block"
       >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <div className="flex items-center justify-between">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             {/* Left Menu */}
-            <div className="flex space-x-6 lg:space-x-8">
+            <div className="flex space-x-6 lg:space-x-8 justify-self-start">
               <Link href="/expositions">
                 <motion.span
                   whileHover={{ scale: 1.05 }}
@@ -66,17 +66,17 @@ export default function Navigation() {
             </div>
 
             {/* Center Logo */}
-            <Link href="/">
+            <Link href="/" className="justify-self-center">
               <motion.h1
                 whileHover={{ scale: 1.02 }}
-                className="text-white font-playfair text-xl sm:text-2xl lg:text-3xl tracking-[0.2em] uppercase cursor-pointer mt-1"
+                className="text-white font-playfair text-xl sm:text-2xl lg:text-3xl tracking-[0.2em] uppercase cursor-pointer whitespace-nowrap"
               >
                 Ivan Gauthier
               </motion.h1>
             </Link>
 
             {/* Right Menu */}
-            <div className="flex items-center space-x-6 lg:space-x-8">
+            <div className="flex items-center space-x-6 lg:space-x-8 justify-self-end">
               <Link href="/galerie">
                 <motion.span
                   whileHover={{ scale: 1.05 }}
