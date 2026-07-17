@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Instagram } from "lucide-react";
 import { Helmet } from "react-helmet-async";
@@ -54,8 +54,38 @@ const pages: Page[] = [
 ];
 
 export default function About() {
-  const [step, setStep] = useState(0);
-  const page = pages[step];
+  const [activeIndex, setActiveIndex] = useState(0);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const updateActive = () => {
+      const viewportCenter = window.scrollY + window.innerHeight / 2;
+      let closestIndex = 0;
+      let closestDistance = Infinity;
+      sectionRefs.current.forEach((el, index) => {
+        if (!el) return;
+        const sectionCenter = el.offsetTop + el.offsetHeight / 2;
+        const distance = Math.abs(sectionCenter - viewportCenter);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = index;
+        }
+      });
+      setActiveIndex(closestIndex);
+    };
+
+    updateActive();
+    window.addEventListener("scroll", updateActive, { passive: true });
+    window.addEventListener("resize", updateActive);
+    return () => {
+      window.removeEventListener("scroll", updateActive);
+      window.removeEventListener("resize", updateActive);
+    };
+  }, []);
+
+  const scrollToSection = (index: number) => {
+    sectionRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
 
   return (
     <>
@@ -109,101 +139,99 @@ export default function About() {
 
       <div className="min-h-screen bg-black pt-20 sm:pt-24 md:pt-28 pb-16">
         <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* En-tête */}
+          {/* Citation d'intro */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
             className="flex flex-col items-center text-center mb-10 sm:mb-14"
           >
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-playfair text-white tracking-wide">Ivan Gauthier</h1>
-            <p className="text-white/60 mt-2 text-sm sm:text-base tracking-[0.2em] uppercase">Artiste Peintre Contemporain</p>
-
-            <blockquote className="mt-6 max-w-2xl text-lg sm:text-xl md:text-2xl font-playfair italic text-white/80 leading-relaxed">
+            <blockquote className="max-w-2xl text-lg sm:text-xl md:text-2xl font-playfair italic text-white/80 leading-relaxed">
               « Quand vous marchez dans la rue les femmes les plus malheureuses sont les plus décorées… »
             </blockquote>
-
-            <div className="mt-6 flex justify-center gap-6">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`text-white/60 hover:text-white transition-colors ${social.color}`}
-                  aria-label={social.label}
-                >
-                  <social.icon className="w-6 h-6" />
-                </a>
-              ))}
-            </div>
           </motion.div>
 
-          {/* Navigation des pages */}
-          <div className="flex items-center justify-center gap-3 mb-10">
+          {/* Indicateur de section (cliquable, suit le scroll) */}
+          <div className="hidden md:flex items-center justify-center gap-3 mb-10 sticky top-24 z-10">
             {pages.map((_, index) => (
               <button
                 key={index}
-                onClick={() => setStep(index)}
-                className={`w-2.5 h-2.5 rounded-full transition-colors ${step === index ? "bg-white" : "bg-white/20 hover:bg-white/40"}`}
-                aria-label={`Aller à la page ${index + 1}`}
+                onClick={() => scrollToSection(index)}
+                className={`w-2.5 h-2.5 rounded-full transition-colors ${activeIndex === index ? "bg-white" : "bg-white/20 hover:bg-white/40"}`}
+                aria-label={`Aller à la section ${index + 1}`}
               />
             ))}
           </div>
 
-          {/* Contenu paginé */}
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="grid md:grid-cols-[minmax(0,340px)_1fr] gap-8 md:gap-12 items-start"
-          >
-              <div className="mx-auto md:mx-0 w-full max-w-xs md:max-w-none md:sticky md:top-28">
-                <div className="aspect-[3/4] rounded-xl overflow-hidden border border-white/10 shadow-2xl">
-                  <img
-                    src={page.photo}
-                    alt={`Ivan Gauthier — ${page.title}`}
-                    className="w-full h-full object-cover"
-                    loading="eager"
-                    width="600"
-                    height="800"
-                  />
-                </div>
-                <p className="text-white/40 text-xs uppercase tracking-widest text-center mt-3">
-                  {step + 1} / {pages.length}
-                </p>
-              </div>
-
-              <div>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-playfair text-white mb-6">
-                  {page.title}
-                </h2>
-                {page.paragraphs.map((p, pi) => (
-                  <p key={pi} className="text-base sm:text-lg text-white/75 leading-relaxed mb-4 sm:mb-5">
-                    <TranslatedText text={p} />
+          {/* Sections au scroll */}
+          <div className="flex flex-col gap-20 sm:gap-28 md:gap-40">
+            {pages.map((page, index) => (
+              <div
+                key={index}
+                ref={(el) => { sectionRefs.current[index] = el; }}
+                className="grid md:grid-cols-[minmax(0,340px)_1fr] gap-8 md:gap-12 items-start"
+              >
+                <div className="mx-auto md:mx-0 w-full max-w-xs md:max-w-none md:sticky md:top-40">
+                  <motion.div
+                    className="aspect-[3/4] rounded-xl overflow-hidden border border-white/10 shadow-2xl"
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true, margin: "-10%" }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <img
+                      src={page.photo}
+                      alt={`Ivan Gauthier — ${page.title}`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      width="600"
+                      height="800"
+                    />
+                  </motion.div>
+                  <p className="text-white/40 text-xs uppercase tracking-widest text-center mt-3">
+                    {index + 1} / {pages.length}
                   </p>
-                ))}
-
-                <div className="mt-8 flex items-center justify-between">
-                  <button
-                    onClick={() => setStep((s) => Math.max(0, s - 1))}
-                    disabled={step === 0}
-                    className="text-white/60 hover:text-white transition-colors disabled:opacity-0 disabled:pointer-events-none"
-                    aria-label="Page précédente"
-                  >
-                    ← Précédent
-                  </button>
-                  <button
-                    onClick={() => setStep((s) => Math.min(pages.length - 1, s + 1))}
-                    disabled={step === pages.length - 1}
-                    className="text-white/60 hover:text-white transition-colors disabled:opacity-0 disabled:pointer-events-none"
-                    aria-label="Page suivante"
-                  >
-                    Suivant →
-                  </button>
                 </div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-10%" }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-playfair text-white mb-6">
+                    {page.title}
+                  </h2>
+                  {page.paragraphs.map((p, pi) => (
+                    <p key={pi} className="text-base sm:text-lg text-white/75 leading-relaxed mb-4 sm:mb-5">
+                      <TranslatedText text={p} />
+                    </p>
+                  ))}
+                </motion.div>
               </div>
+            ))}
+          </div>
+
+          {/* Réseaux sociaux */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="flex justify-center gap-6 mt-20 sm:mt-24 pt-10 border-t border-white/10"
+          >
+            {socialLinks.map((social) => (
+              <a
+                key={social.label}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`text-white/60 hover:text-white transition-colors ${social.color}`}
+                aria-label={social.label}
+              >
+                <social.icon className="w-7 h-7" />
+              </a>
+            ))}
           </motion.div>
         </div>
       </div>
