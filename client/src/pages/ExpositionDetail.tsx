@@ -1,7 +1,7 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useExhibitions } from "@/hooks/use-exhibitions";
 import { useLocation } from "wouter";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import TranslatedText from "@/components/TranslatedText";
 
@@ -110,6 +110,25 @@ export default function ExpositionDetail() {
 function ExpositionMasonry({ images }: { images: { url: string; caption: string }[] }) {
   const [columns, setColumns] = useState(3);
   const [ratios, setRatios] = useState<number[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const goToPrevious = () => {
+    setLightboxIndex((prev) => (prev === null ? null : (prev > 0 ? prev - 1 : images.length - 1)));
+  };
+  const goToNext = () => {
+    setLightboxIndex((prev) => (prev === null ? null : (prev < images.length - 1 ? prev + 1 : 0)));
+  };
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxIndex(null);
+      if (e.key === 'ArrowLeft') goToPrevious();
+      if (e.key === 'ArrowRight') goToNext();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [lightboxIndex, images.length]);
 
   useEffect(() => {
     const compute = () => {
@@ -142,7 +161,7 @@ function ExpositionMasonry({ images }: { images: { url: string; caption: string 
     return () => { cancelled = true; };
   }, [images]);
 
-  const cols: { url: string; caption: string }[][] = Array.from({ length: columns }, () => []);
+  const cols: { url: string; caption: string; originalIndex: number }[][] = Array.from({ length: columns }, () => []);
   if (ratios.length === images.length) {
     const heights = Array.from({ length: columns }, () => 0);
     const gapUnit = 1;
@@ -151,41 +170,103 @@ function ExpositionMasonry({ images }: { images: { url: string; caption: string 
       const estimatedHeight = 1 / ratio;
       let minIndex = 0;
       for (let i = 1; i < columns; i++) if (heights[i] < heights[minIndex]) minIndex = i;
-      cols[minIndex].push(im);
+      cols[minIndex].push({ ...im, originalIndex: idx });
       heights[minIndex] += estimatedHeight + gapUnit;
     });
   } else {
-    images.forEach((im, idx) => cols[idx % columns].push(im));
+    images.forEach((im, idx) => cols[idx % columns].push({ ...im, originalIndex: idx }));
   }
 
   if (images.length === 0) return <div className="text-white/60 text-center">Aucune image pour cette exposition.</div>;
 
   return (
-    <div className="grid gap-8" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))` }}>
-      {cols.map((col, ci) => (
-        <div key={ci} className="flex flex-col gap-8">
-          {col.map((image, index) => (
+    <>
+      <div className="grid gap-8" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))` }}>
+        {cols.map((col, ci) => (
+          <div key={ci} className="flex flex-col gap-8">
+            {col.map((image, index) => (
+              <motion.div
+                key={`c${ci}-img-${index}`}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] } }}
+                viewport={{ once: true, margin: "-10%" }}
+                className="rounded-lg overflow-hidden group cursor-pointer relative"
+                onClick={() => setLightboxIndex(image.originalIndex)}
+              >
+                <img
+                  src={image.url}
+                  alt={image.caption}
+                  className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <p className="text-white font-medium text-lg">
+                    <TranslatedText text={image.caption} />
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <AnimatePresence>
+        {lightboxIndex !== null && (
+          <motion.div
+            className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
+            role="dialog" aria-modal="true"
+            onClick={() => setLightboxIndex(null)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <button
+              onClick={() => setLightboxIndex(null)}
+              className="absolute top-4 right-4 z-20 bg-black/60 rounded-full p-2 hover:bg-white/20 transition-all border border-white/20"
+              aria-label="Fermer"
+            >
+              <X className="text-white" size={20} />
+            </button>
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
+                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/60 rounded-full p-2 sm:p-3 border border-white/20"
+                  aria-label="Image précédente"
+                >
+                  <span className="text-white text-lg sm:text-xl font-bold">‹</span>
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); goToNext(); }}
+                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/60 rounded-full p-2 sm:p-3 border border-white/20"
+                  aria-label="Image suivante"
+                >
+                  <span className="text-white text-lg sm:text-xl font-bold">›</span>
+                </button>
+              </>
+            )}
             <motion.div
-              key={`c${ci}-img-${index}`}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] } }}
-              viewport={{ once: true, margin: "-10%" }}
-              className="rounded-lg overflow-hidden group cursor-pointer relative"
+              className="relative w-[95vw] h-[85vh] flex flex-col items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ scale: 0.97, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.97, opacity: 0 }}
+              transition={{ duration: 0.3 }}
             >
               <img
-                src={image.url}
-                alt={image.caption}
-                className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                src={images[lightboxIndex].url}
+                alt={images[lightboxIndex].caption}
+                className="max-w-full max-h-[80vh] object-contain rounded-lg"
               />
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                <p className="text-white font-medium text-lg">
-                  <TranslatedText text={image.caption} />
+              {images[lightboxIndex].caption && (
+                <p className="text-white text-center mt-4 text-lg">
+                  <TranslatedText text={images[lightboxIndex].caption} />
                 </p>
-              </div>
+              )}
             </motion.div>
-          ))}
-        </div>
-      ))}
-    </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useArtworkTranslations } from "@/utils/translations";
 import { ChevronRight } from "lucide-react";
+import ArtworkLightbox from "@/components/ArtworkLightbox";
+import type { Artwork } from "@shared/schema";
 
 export default function Galerie() {
   const { data: artworks } = useArtworks();
@@ -13,6 +15,18 @@ export default function Galerie() {
   const [activeRow, setActiveRow] = useState<string | null>(null);
   const { t } = useLanguage();
   const { translateCategory } = useArtworkTranslations();
+  const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  const openLightbox = (artwork: Artwork) => {
+    setSelectedArtwork(artwork);
+    setIsLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+    setTimeout(() => setSelectedArtwork(null), 300);
+  };
 
   const setScrollerRef = (key: string) => (el: HTMLDivElement | null) => {
     scrollersRef.current[key] = el;
@@ -209,6 +223,7 @@ export default function Galerie() {
                             onClick={() => {
                               setActiveRow(cat);
                               setSelected(cat, idx);
+                              openLightbox(a);
                               const el = scrollersRef.current[cat];
                               if (el) {
                                 const child = (el.children[idx] as HTMLElement) || null;
@@ -344,6 +359,7 @@ export default function Galerie() {
                             onClick={() => {
                               setActiveRow(rowKey);
                               setSelected(rowKey, idx);
+                              openLightbox(a);
                               const el = scrollersRef.current[rowKey];
                               if (el) {
                                 const child = (el.children[idx] as HTMLElement) || null;
@@ -405,6 +421,11 @@ export default function Galerie() {
           </div>
         )}
       </section>
+      <ArtworkLightbox
+        artwork={selectedArtwork}
+        isOpen={isLightboxOpen}
+        onClose={closeLightbox}
+      />
     </div>
   );
 }

@@ -38,11 +38,11 @@ export default function About() {
   const isMobile = useIsMobile();
   
   // Traductions automatiques
-  const { translatedText: translatedBirthText } = useAutoTranslation("Je suis né le 1er mars 2000 à Beregovo en Ukraine.");
+  const { translatedText: translatedBirthText } = useAutoTranslation("D'origine ukrainienne, orphelin, il est adopté et arrive en France à l'âge de 3 ans. Il grandit dans la région lilloise, entre richesse culturelle et défis sociaux, dans un milieu populaire qui a exacerbé sa sensibilité artistique. Dès l'enfance, Ivan ressent le besoin impérieux de s'exprimer à travers le dessin, mais aussi le théâtre et la musique.");
   const { translatedText: translatedJourneyTitle } = useAutoTranslation("Mon parcours");
-  const { translatedText: translatedJourneyText } = useAutoTranslation("Très jeune ma sensibilité s'ouvre et je me confronte à de nombreuses formes d'expression : la danse, le théâtre, le cinéma, le piano, le dessin, la mode puis la peinture. Chacune ne cesseront de s'enrichir l'une de l'autre.");
+  const { translatedText: translatedJourneyText } = useAutoTranslation("Très jeune, Ivan comprend que son avenir est ailleurs, à Paris. Il s'y rend une première fois à 16 ans, déterminé, pour s'y installer définitivement à 19 ans. Il s'y nourrit de l'effervescence des expositions, des musées, des galeries, explore la mode et le théâtre au Cours Florent, vend ses premières œuvres et se construit un tissu relationnel qui lui ouvre les portes d'une élite qu'il fréquente.");
   const { translatedText: translatedArtTitle } = useAutoTranslation("Mon art");
-  const { translatedText: translatedArtText } = useAutoTranslation("J'expose et vend mes œuvres depuis l'âge de 16 ans en France et sur tous les continents. Mon travail expressionniste et figuratif traduit une émotion souvent intense mais délicate, une gamme chromatique large et forte au service de créations oniriques parfois tendres ou qui témoignent de l'âpreté de la vie. Ses personnages, ses paysages et ses ciels racontent des histoires paradoxales et profondément humaines.");
+  const { translatedText: translatedArtText } = useAutoTranslation("L'œuvre d'Ivan Gauthier oscille entre la spontanéité du trait, brut et impulsif, et une figuration plus étudiée en peinture sur toile. Le portrait reste son sujet de prédilection. Sa palette, vive et intense, explore en particulier le bleu de Prusse. Chacun de ses portraits est imprégné d'une part de lui-même, révélant la mélancolie des visages qu'il peint et l'éclat des couleurs vives, dans un paradoxe saisissant.");
   const { translatedText: translatedClickHint } = useAutoTranslation("Cliquez pour découvrir");
 
   useEffect(() => {
@@ -138,20 +138,26 @@ export default function About() {
   ];
 
   const fullBiography = `
-    Je suis né le 1er mars 2000 à Beregovo en Ukraine.
+    « Quand vous marchez dans la rue les femmes les plus malheureuses sont les plus décorées… »
 
-    Très jeune ma sensibilité s'ouvre et je me confronte à de nombreuses formes d'expression : la danse, le théâtre, le cinéma, le piano, le dessin, la mode puis la peinture. Chacune ne cesseront de s'enrichir l'une de l'autre.
+    D'origine ukrainienne, orphelin, il est adopté et arrive en France à l'âge de 3 ans. Il grandit dans la région lilloise, entre richesse culturelle et économique du Nord et les défis sociaux, ouvriers, qui y persistent. Ivan se forge dans un milieu populaire empreint de tristesse et de pauvreté, qui a exacerbé sa sensibilité artistique.
 
-    J'expose et vend mes œuvres depuis l'âge de 16 ans en France et sur tous les continents. Mon travail expressionniste et figuratif traduit une émotion souvent intense mais délicate, une gamme chromatique large et forte au service de créations oniriques parfois tendres ou qui témoignent de l'âpreté de la vie. Ses personnages, ses paysages et ses ciels racontent des histoires paradoxales et profondément humaines.
+    Dès l'enfance, Ivan ressent le besoin impérieux de s'exprimer à travers le dessin, en particulier, mais aussi le théâtre et la musique. Ses parents jouent un rôle déterminant dans son épanouissement artistique : son père, passionné d'archéologie et d'histoire naturelle, et sa mère, restauratrice d'objets d'art, lui offrent un accès privilégié à la culture et un soutien inconditionnel dans sa pratique de l'Art.
 
-    Ma démarche artistique s'inscrit dans une recherche constante d'authenticité et d'émotion pure. Chaque œuvre est une fenêtre ouverte sur mon univers intérieur, où les frontières entre réalité et imagination s'estompent pour laisser place à une expression sincère et viscérale.
+    Très jeune, Ivan comprend que son avenir personnel et artistique est ailleurs, à Paris. Il s'y rend une première fois à 16 ans, déterminé, pour s'y installer définitivement à 19 ans. Il s'y nourrit de l'effervescence et de la richesse culturelle des expositions, musées, galeries, explore le monde de la mode et du théâtre au Cours Florent. Il y vend ses premières œuvres et se construit un tissu relationnel qui lui ouvre les portes d'une élite qu'il fréquente, organisant des dîners chez lui pour y recevoir amateurs d'Art et collectionneurs.
+
+    L'œuvre d'Ivan Gauthier oscille entre la spontanéité du trait du dessin, brut, impulsif, et une figuration plus étudiée, méticuleuse en peinture sur toile. S'il lui arrive d'explorer le paysage ou la nature morte, le portrait reste son sujet de prédilection. Sa palette, vive et intense, explore en particulier le bleu de Prusse et la nuit étoilée de Kees Van Dongen, une de ses premières grandes émotions artistiques. Les motifs des vêtements relèvent de son goût pour la mode et les tissus, toujours dans l'intention de créer un contraste entre le vêtement et ce qu'il habille.
+
+    Artiste auquel on met une majuscule sans hésiter, Ivan Gauthier compte déjà 280 œuvres à son actif, pour la très grande majorité au sein de collections d'amateurs d'Art avertis. Avide d'Art, d'émotion et de sensibilité, il est aujourd'hui l'un des jeunes artistes à suivre absolument.
   `;
   const mobileBiography = `
-    Je suis né le 1er mars 2000 à Beregovo en Ukraine. Très jeune, je me confronte à de nombreuses formes d’expression — danse, théâtre, cinéma, piano, dessin, mode, peinture — qui s’enrichissent mutuellement.
+    D'origine ukrainienne, orphelin, Ivan est adopté et arrive en France à l'âge de 3 ans. Il grandit dans la région lilloise, dans un milieu populaire qui exacerbe sa sensibilité artistique. Dès l'enfance, il ressent le besoin de s'exprimer à travers le dessin, le théâtre et la musique.
 
-    Depuis mes 16 ans en France et à l’international, j’expose et vends mes œuvres. Mon travail expressionniste et figuratif traduit des émotions intenses, avec une gamme chromatique riche au service de créations oniriques, parfois tendres ou témoignant de l’âpreté de la vie.
+    Très jeune, il comprend que son avenir est à Paris. Il s'y rend à 16 ans, puis s'y installe définitivement à 19 ans, où il vend ses premières œuvres et se construit un tissu relationnel qui lui ouvre les portes d'une élite qu'il fréquente.
 
-    Ma démarche artistique cherche l’authenticité et l’émotion pure : chaque œuvre est une fenêtre sur mon univers intérieur, où réalité et imagination s’entremêlent pour une expression sincère et viscérale.
+    Son œuvre oscille entre la spontanéité du dessin, brut et impulsif, et une figuration plus étudiée en peinture sur toile. Le portrait reste son sujet de prédilection, avec une palette vive et intense inspirée notamment du bleu de Prusse.
+
+    Avec déjà 280 œuvres à son actif, pour la plupart au sein de collections d'amateurs avertis, Ivan Gauthier est aujourd'hui l'un des jeunes artistes à suivre absolument.
   `;
   const effectiveFullBiography = isMobile ? mobileBiography : fullBiography;
 
@@ -188,8 +194,6 @@ export default function About() {
               "@type": "Person",
               "name": "Ivan Gauthier",
               "jobTitle": "Artiste Peintre Contemporain",
-              "birthDate": "2000-03-01",
-              "birthPlace": "Beregovo, Ukraine",
               "nationality": "Français"
             },
             "breadcrumb": {
@@ -268,7 +272,7 @@ export default function About() {
                     >
                       <div className="aspect-[3/4] rounded-xl overflow-hidden border border-white/10 shadow-2xl">
                         <img
-                          src="https://www.casting.fr/assets/cache/book_picture_detail/picture/1/1/5/9a6256f7ae4916451292576b954b22affad72d7b.jpg?tms=1680857202"
+                          src="/images/about/portrait.jpg"
                           alt="Portrait d'Ivan Gauthier, artiste peintre contemporain"
                           className="w-full h-full object-cover"
                           loading="eager"
@@ -276,7 +280,27 @@ export default function About() {
                           height="800"
                         />
                       </div>
-                      
+
+                      {/* Photos d'ambiance */}
+                      <div className="mt-6 grid grid-cols-3 gap-3">
+                        {["/images/about/photo-2.jpg", "/images/about/photo-3.jpg", "/images/about/photo-4.jpg"].map((src, i) => (
+                          <motion.div
+                            key={src}
+                            className="aspect-square rounded-lg overflow-hidden border border-white/10"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.7 + i * 0.1 }}
+                          >
+                            <img
+                              src={src}
+                              alt={`Ivan Gauthier - photo ${i + 2}`}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          </motion.div>
+                        ))}
+                      </div>
+
                       {/* Social Links */}
                       <motion.div 
                         initial={{ opacity: 0, y: 10 }}
