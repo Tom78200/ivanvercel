@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Instagram } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import TranslatedText from "@/components/TranslatedText";
-
-const socialLinks = [
-  { icon: Instagram, href: "https://www.instagram.com/ivan_gauthier.art/", label: "Instagram", color: "hover:text-pink-400" },
-];
 
 type Page = {
   title: string;
@@ -211,28 +206,6 @@ export default function About() {
               </div>
             ))}
           </div>
-
-          {/* Réseaux sociaux */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="flex justify-center gap-6 mt-20 sm:mt-24 pt-10 border-t border-white/10"
-          >
-            {socialLinks.map((social) => (
-              <a
-                key={social.label}
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`text-white/60 hover:text-white transition-colors ${social.color}`}
-                aria-label={social.label}
-              >
-                <social.icon className="w-7 h-7" />
-              </a>
-            ))}
-          </motion.div>
         </div>
       </div>
     </>
