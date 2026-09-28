@@ -123,7 +123,7 @@ export default function Gallery() {
         `}</script>
       </Helmet>
       <AnimatePresence>
-        <section ref={heroRef} className="relative w-full h-[90vh] overflow-hidden">
+        <section ref={heroRef} className="relative w-full h-screen min-h-[650px] overflow-hidden bg-black">
           {sliderArtworks.length > 0 ? (
             <AnimatePresence mode="wait">
               {sliderArtworks[currentSlideIndex] && (
@@ -147,7 +147,7 @@ export default function Gallery() {
                     height="1080"
                     style={{ y: parallaxY }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black" />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -172,7 +172,7 @@ export default function Gallery() {
               delay: 0.5,
               ease: [0.19, 1, 0.22, 1]
             }}
-            className="hidden md:block absolute bottom-20 left-1/2 transform -translate-x-1/2 text-center z-10"
+            className="hidden md:block absolute bottom-16 lg:bottom-20 left-1/2 transform -translate-x-1/2 text-center z-10"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-playfair text-white mb-4 tracking-wider">IVAN GAUTHIER</h1>
             <p className="text-lg md:text-xl text-white opacity-80 tracking-[0.3em] uppercase">Artiste Contemporain</p>
@@ -181,9 +181,8 @@ export default function Gallery() {
 
         </section>
 
-        {/* Transition et fragmentation vers la grille d'œuvres */}
+        {/* Grille d'œuvres */}
         <section className="bg-black relative py-12 sm:py-16 md:py-20">
-          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none -translate-y-16 z-10" />
           <div className="w-full max-w-[2000px] mx-auto px-3 sm:px-4 md:px-6">
             <MasonryColumns artworks={artworks} isLightboxOpen={isLightboxOpen} onOpen={openLightbox} />
           </div>
