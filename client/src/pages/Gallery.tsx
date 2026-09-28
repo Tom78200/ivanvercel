@@ -179,24 +179,6 @@ export default function Gallery() {
             <div className="flex justify-center w-full mt-8"></div>
           </motion.div>
 
-          {/* Flèche de scroll pulsante */}
-          <motion.div
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 pointer-events-none"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.5, duration: 0.6 }}
-          >
-            <motion.div
-              animate={{ y: [0, 8, 0], opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              className="flex flex-col items-center gap-0.5"
-            >
-              <span className="block w-px h-8 bg-white/40" />
-              <svg width="12" height="8" viewBox="0 0 12 8" fill="none" className="text-white/60">
-                <path d="M1 1L6 7L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </motion.div>
-          </motion.div>
         </section>
 
         {/* Transition et fragmentation vers la grille d'œuvres */}
