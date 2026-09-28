@@ -19,6 +19,16 @@ export default function Galerie() {
   const { translateCategory } = useArtworkTranslations();
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
+  const [isRoomDark, setIsRoomDark] = useState(true);
+
+  // Noir complet pendant quelques dixièmes de seconde puis allumage des lumières
+  useEffect(() => {
+    const darkTimer = setTimeout(() => {
+      setIsRoomDark(false);
+    }, 380);
+    return () => clearTimeout(darkTimer);
+  }, []);
 
   // Catégories présentes dans les données
   const availableCategories = ARTWORK_CATEGORIES.filter(c => 
@@ -29,14 +39,18 @@ export default function Galerie() {
     ? ARTWORK_CATEGORIES.filter(c => c !== 'Autres')
     : [selectedCategory];
 
-  const openLightbox = (artwork: Artwork) => {
+  const openLightbox = (artwork: Artwork, rect?: DOMRect) => {
     setSelectedArtwork(artwork);
+    setOriginRect(rect || null);
     setIsLightboxOpen(true);
   };
 
   const closeLightbox = () => {
     setIsLightboxOpen(false);
-    setTimeout(() => setSelectedArtwork(null), 300);
+    setTimeout(() => {
+      setSelectedArtwork(null);
+      setOriginRect(null);
+    }, 350);
   };
 
   const setScrollerRef = (key: string) => (el: HTMLDivElement | null) => {
@@ -110,12 +124,20 @@ export default function Galerie() {
       className="min-h-screen bg-black text-white pt-16 sm:pt-20 md:pt-28"
     >
       {/* Rideau noir court créant l'effet d'obscurité totale puis allumage des projecteurs de la galerie */}
-      <motion.div
-        initial={{ opacity: 1 }}
-        animate={{ opacity: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="fixed inset-0 bg-black z-40 pointer-events-none"
-      />
+      {/* 1. Obscurité totale pendant quelques dixièmes de seconde puis allumage des lumières */}
+      <AnimatePresence>
+        {isRoomDark && (
+          <motion.div
+            key="galerie-blackout"
+            initial={{ opacity: 1 }}
+            exit={{ 
+              opacity: 0, 
+              transition: { duration: 0.7, ease: [0.65, 0, 0.35, 1] } 
+            }}
+            className="fixed inset-0 bg-[#070709] z-[100] pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
       <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-10 md:py-12">
         <motion.h1 
           className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-playfair mb-6 sm:mb-8"
@@ -273,10 +295,11 @@ export default function Galerie() {
                             isSelected={isSelected}
                             isFirst={idx === 0}
                             delayIndex={idx}
-                            onClick={() => {
+                            rowDelay={0.4 + catIndex * 0.15}
+                            onClick={(rect) => {
                               setActiveRow(cat);
                               setSelected(cat, idx);
-                              openLightbox(a);
+                              openLightbox(a, rect);
                               const el = scrollersRef.current[cat];
                               if (el) {
                                 const child = (el.children[idx] as HTMLElement) || null;
@@ -380,10 +403,11 @@ export default function Galerie() {
                             isSelected={isSelected}
                             isFirst={idx === 0}
                             delayIndex={idx}
-                            onClick={() => {
+                            rowDelay={0.4 + ARTWORK_CATEGORIES.filter(c => c !== 'Autres').length * 0.15}
+                            onClick={(rect) => {
                               setActiveRow(rowKey);
                               setSelected(rowKey, idx);
-                              openLightbox(a);
+                              openLightbox(a, rect);
                               const el = scrollersRef.current[rowKey];
                               if (el) {
                                 const child = (el.children[idx] as HTMLElement) || null;
@@ -417,6 +441,7 @@ export default function Galerie() {
         artwork={selectedArtwork}
         isOpen={isLightboxOpen}
         onClose={closeLightbox}
+        originRect={originRect}
       />
     </motion.div>
   );

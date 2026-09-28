@@ -6,7 +6,7 @@ import TranslatedText from "@/components/TranslatedText";
 interface GalleryArtworkCardProps {
   artwork: Artwork;
   index: number;
-  onOpen: (artwork: Artwork) => void;
+  onOpen: (artwork: Artwork, rect?: DOMRect) => void;
   isLightboxOpen: boolean;
 }
 
@@ -72,7 +72,7 @@ export default function GalleryArtworkCard({
         perspective: 900,
       }}
       className="cursor-pointer select-none mb-4 sm:mb-6"
-      onClick={() => onOpen(artwork)}
+      onClick={() => onOpen(artwork, cardRef.current?.getBoundingClientRect())}
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
