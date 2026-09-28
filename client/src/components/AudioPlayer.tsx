@@ -29,9 +29,7 @@ declare global {
   }
 }
 
-import { useState, useEffect } from "react";
-import { Volume2, VolumeX } from "lucide-react";
-import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 
 type YouTubePlayer = {
   playVideo: () => void;
@@ -40,8 +38,7 @@ type YouTubePlayer = {
 };
 
 export default function AudioPlayer() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [player, setPlayer] = useState<YouTubePlayer | null>(null);
+  const playerRef = useRef<YouTubePlayer | null>(null);
 
   useEffect(() => {
     // Créer un div caché pour le player YouTube
@@ -70,63 +67,27 @@ export default function AudioPlayer() {
           loop: 1,
           playlist: 'YRu6NK19VkQ'
         },
-        events: {
-          onStateChange: (event: { data: number }) => {
-            // YouTube PlayerState.PLAYING = 1
-            if (event.data === 1) {
-              setIsPlaying(true);
-            } else if (event.data === 2) { // PAUSED
-              setIsPlaying(false);
-            }
-          }
-        }
       });
 
-      setPlayer(newPlayer);
+      playerRef.current = newPlayer;
       // Certaines plateformes bloquent l'autoplay: tenter un play après un court délai
       setTimeout(() => {
         try { 
           newPlayer.playVideo();
-          // Forcer l'état à true après le play
-          setTimeout(() => setIsPlaying(true), 100);
         } catch {}
       }, 800);
     };
 
     return () => {
-      if (player) {
-        player.destroy();
+      if (playerRef.current) {
+        playerRef.current.destroy();
       }
-      document.body.removeChild(playerContainer);
+      if (document.body.contains(playerContainer)) {
+        document.body.removeChild(playerContainer);
+      }
     };
   }, []);
 
-  const togglePlay = () => {
-    if (!player) return;
-
-    if (isPlaying) {
-      player.pauseVideo();
-    } else {
-      player.playVideo();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  return (
-    <motion.button
-      onClick={togglePlay}
-      className="fixed bottom-8 right-8 z-50 p-4 rounded-full bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl hover:bg-white/20 transition-all duration-300"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      {isPlaying ? (
-        <Volume2 className="w-6 h-6 text-white" />
-      ) : (
-        <VolumeX className="w-6 h-6 text-white" />
-      )}
-    </motion.button>
-  );
+  // Pas de rendu UI — la musique joue en arrière-plan silencieusement
+  return null;
 }

@@ -3,6 +3,8 @@ import { Helmet } from "react-helmet-async";
 import AudioPlayer from "./AudioPlayer";
 import AnimatedBackground from "./AnimatedBackground";
 import Footer from "./Footer";
+import ArtCursor from "./ArtCursor";
+import ArtLoader from "./ArtLoader";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -53,6 +55,8 @@ export default function Layout({ children }: LayoutProps) {
         }
       `}</script>
       {/* Masquage global d'images désactivé */}
+      <ArtLoader />
+      <ArtCursor />
       <AnimatedBackground />
       <Navigation />
       <AudioPlayer />

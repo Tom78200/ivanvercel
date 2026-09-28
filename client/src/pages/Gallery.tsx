@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import { useArtworks } from "@/hooks/use-artworks";
 import ArtworkLightbox from "@/components/ArtworkLightbox";
 import type { Artwork } from "@shared/schema";
@@ -8,6 +8,7 @@ import { Helmet } from "react-helmet-async";
 import { useLanguage } from "@/contexts/LanguageContext";
  
 import TranslatedText from "@/components/TranslatedText";
+import GalleryArtworkCard from "@/components/GalleryArtworkCard";
 
 export default function Gallery() {
   const { data: artworks, isLoading } = useArtworks();
@@ -16,7 +17,13 @@ export default function Gallery() {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [, setLocation] = useLocation();
   const { t } = useLanguage();
- 
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const rawY = useTransform(scrollYProgress, [0, 1], [0, 150]);
+  const parallaxY = useSpring(rawY, { stiffness: 80, damping: 25, mass: 0.5 });
+  const textRawY = useTransform(scrollYProgress, [0, 0.8], [0, -60]);
+  const textY = useSpring(textRawY, { stiffness: 90, damping: 22 });
+  const textOpacity = useTransform(scrollYProgress, [0, 0.65], [1, 0]);
 
   const sliderArtworks = artworks?.filter(artwork => artwork.showInSlider) || [];
 
@@ -116,7 +123,7 @@ export default function Gallery() {
         `}</script>
       </Helmet>
       <AnimatePresence>
-        <section className="relative w-full h-[90vh] overflow-hidden">
+        <section ref={heroRef} className="relative w-full h-[90vh] overflow-hidden">
           {sliderArtworks.length > 0 ? (
             <AnimatePresence mode="wait">
               {sliderArtworks[currentSlideIndex] && (
@@ -131,13 +138,14 @@ export default function Gallery() {
                   }}
                   className="absolute inset-0"
                 >
-                  <img 
+                  <motion.img 
                     src={sliderArtworks[currentSlideIndex]?.imageUrl} 
                     alt={`${sliderArtworks[currentSlideIndex]?.title} - Œuvre d'Ivan Gauthier, artiste peintre contemporain`}
                     className="w-full h-full object-cover"
                     loading="eager"
                     width="1920"
                     height="1080"
+                    style={{ y: parallaxY }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black" />
                 </motion.div>
@@ -147,14 +155,18 @@ export default function Gallery() {
             <div className="absolute inset-0 bg-gradient-to-b from-gray-900 to-black" />
           )}
           {/* Nom centré mobile */}
-          <div className="md:hidden absolute top-1/2 left-1/2 z-20 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none select-none w-full px-3 sm:px-4">
+          <motion.div 
+            style={{ y: textY, opacity: textOpacity }}
+            className="md:hidden absolute top-1/2 left-1/2 z-20 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none select-none w-full px-3 sm:px-4"
+          >
             <h1 className="text-3xl xs:text-4xl sm:text-5xl font-playfair text-white mb-2 tracking-wider uppercase">IVAN GAUTHIER</h1>
             <p className="text-sm sm:text-base text-white opacity-80 tracking-[0.2em] uppercase mb-4">Artiste Contemporain</p>
-          </div>
+          </motion.div>
           {/* Nom centré desktop */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            style={{ y: textY, opacity: textOpacity }}
             transition={{ 
               duration: 0.8,
               delay: 0.5,
@@ -166,9 +178,30 @@ export default function Gallery() {
             <p className="text-lg md:text-xl text-white opacity-80 tracking-[0.3em] uppercase">Artiste Contemporain</p>
             <div className="flex justify-center w-full mt-8"></div>
           </motion.div>
+
+          {/* Flèche de scroll pulsante */}
+          <motion.div
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 pointer-events-none"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.5, duration: 0.6 }}
+          >
+            <motion.div
+              animate={{ y: [0, 8, 0], opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              className="flex flex-col items-center gap-0.5"
+            >
+              <span className="block w-px h-8 bg-white/40" />
+              <svg width="12" height="8" viewBox="0 0 12 8" fill="none" className="text-white/60">
+                <path d="M1 1L6 7L11 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </motion.div>
+          </motion.div>
         </section>
 
-        <section className="bg-black py-12 sm:py-16 md:py-20">
+        {/* Transition et fragmentation vers la grille d'œuvres */}
+        <section className="bg-black relative py-12 sm:py-16 md:py-20">
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none -translate-y-16 z-10" />
           <div className="w-full max-w-[2000px] mx-auto px-3 sm:px-4 md:px-6">
             <MasonryColumns artworks={artworks} isLightboxOpen={isLightboxOpen} onOpen={openLightbox} />
           </div>
@@ -265,80 +298,15 @@ function MasonryColumns({ artworks, onOpen, isLightboxOpen }: MasonryProps) {
   return (
     <div className="grid gap-4 sm:gap-5 md:gap-6" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))` }}>
       {cols.map((col, ci) => (
-        <div key={ci} className="flex flex-col gap-4 sm:gap-5 md:gap-6">
+        <div key={ci} className="flex flex-col">
           {col.map((artwork, index) => (
-            <motion.div
-              key={`c${ci}-art-${index}`}
-              initial={{ 
-                opacity: 0, 
-                y: 40, 
-                scale: 0.95,
-                filter: "blur(8px)"
-              }}
-              whileInView={{ 
-                opacity: 1, 
-                y: 0, 
-                scale: 1,
-                filter: "blur(0px)",
-                transition: { 
-                  duration: 0.8, 
-                  ease: [0.25, 0.46, 0.45, 0.94],
-                  delay: index * 0.1
-                } 
-              }}
-              viewport={{ once: true, margin: "-5%" }}
-              className="artwork-card group cursor-pointer"
-              onClick={() => onOpen(artwork)}
-              whileHover={{ 
-                scale: 1.02,
-                transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }
-              }}
-            >
-              <div className="relative overflow-hidden">
-                <img
-                  src={artwork.imageUrl}
-                  alt={`${artwork.title} - ${artwork.technique} ${artwork.year} - Œuvre d'Ivan Gauthier, artiste peintre contemporain`}
-                  loading="lazy"
-                  className="w-full h-auto object-cover"
-                  width="800"
-                  height="600"
-                />
-                <motion.div 
-                  className={`absolute bottom-0 left-0 right-0 p-3 sm:p-4 text-white bg-gradient-to-t from-black/80 via-black/40 to-transparent${isLightboxOpen ? ' hide-on-mobile' : ''}`}
-                  initial={{ opacity: 0.8, y: 5 }}
-                  whileHover={{ 
-                    opacity: 1, 
-                    y: 0,
-                    transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }
-                  }}
-                  animate={{ opacity: 0.8, y: 5 }}
-                >
-                  <motion.h3 
-                    className="text-lg sm:text-xl font-playfair mb-1"
-                    initial={{ opacity: 0.9, x: 0 }}
-                    whileHover={{ 
-                      opacity: 1, 
-                      x: 0,
-                      transition: { duration: 0.2, delay: 0.1 }
-                    }}
-                    animate={{ opacity: 0.9, x: 0 }}
-                  >
-                    <TranslatedText text={artwork.title} />
-                  </motion.h3>
-                  <motion.p 
-                    className="text-xs sm:text-sm opacity-90"
-                    initial={{ opacity: 0, x: -10 }}
-                    whileHover={{ 
-                      opacity: 1, 
-                      x: 0,
-                      transition: { duration: 0.2, delay: 0.15 }
-                    }}
-                  >
-                    <TranslatedText text={`${artwork.technique}`} /> • {artwork.year}
-                  </motion.p>
-                </motion.div>
-              </div>
-            </motion.div>
+            <GalleryArtworkCard
+              key={artwork.id || `c${ci}-art-${index}`}
+              artwork={artwork}
+              index={ci + index * columns}
+              onOpen={onOpen}
+              isLightboxOpen={isLightboxOpen}
+            />
           ))}
         </div>
       ))}

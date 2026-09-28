@@ -44,58 +44,63 @@ export default function Navigation() {
             {/* Left Menu */}
             <div className="flex space-x-6 lg:space-x-8 justify-self-start">
               <Link href="/expositions">
-                <motion.span
-                  whileHover={{ scale: 1.05 }}
-                  className={`text-white font-playfair text-base lg:text-lg hover:opacity-70 transition-opacity cursor-pointer ${
-                    location === '/expositions' ? 'opacity-100 font-semibold' : 'opacity-80'
-                  }`}
-                >
-                  {t('nav.exhibitions')}
-                </motion.span>
+                <span className="relative group py-1 cursor-pointer">
+                  <span className={`text-white font-playfair text-base lg:text-lg transition-opacity duration-300 ${
+                    location === '/expositions' ? 'opacity-100 font-semibold' : 'opacity-80 group-hover:opacity-100'
+                  }`}>
+                    {t('nav.exhibitions')}
+                  </span>
+                  <span className={`absolute bottom-0 left-0 h-[1.5px] bg-white transition-all duration-300 ${
+                    location === '/expositions' ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`} />
+                </span>
               </Link>
               <Link href="/about">
-                <motion.span
-                  whileHover={{ scale: 1.05 }}
-                  className={`text-white font-playfair text-base lg:text-lg hover:opacity-70 transition-opacity cursor-pointer ${
+                <span className="relative group py-1 cursor-pointer">
+                  <span className={`text-white font-playfair text-base lg:text-lg transition-opacity duration-300 ${
                     location === '/about' ? 'opacity-100 font-semibold' : 'opacity-80'
-                  }`}
-                >
-                  {t('nav.about')}
-                </motion.span>
+                  }`}>
+                    {t('nav.about')}
+                  </span>
+                  <span className={`absolute bottom-0 left-0 h-[1.5px] bg-white transition-all duration-300 ${
+                    location === '/about' ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`} />
+                </span>
               </Link>
             </div>
 
             {/* Center Logo */}
             <Link href="/" className="justify-self-center">
-              <motion.h1
-                whileHover={{ scale: 1.02 }}
-                className="text-white font-playfair text-xl sm:text-2xl lg:text-3xl tracking-[0.2em] uppercase cursor-pointer whitespace-nowrap"
-              >
+              <h1 className="text-white font-playfair text-xl sm:text-2xl lg:text-3xl tracking-[0.2em] uppercase cursor-pointer whitespace-nowrap hover:opacity-75 transition-opacity duration-300">
                 Ivan Gauthier
-              </motion.h1>
+              </h1>
             </Link>
 
             {/* Right Menu */}
             <div className="flex items-center space-x-6 lg:space-x-8 justify-self-end">
               <Link href="/galerie">
-                <motion.span
-                  whileHover={{ scale: 1.05 }}
-                  className={`text-white font-playfair text-base lg:text-lg hover:opacity-70 transition-opacity cursor-pointer ${
-                    location === '/galerie' ? 'opacity-100 font-semibold' : 'opacity-80'
-                  }`}
-                >
-                  {t('nav.gallery')}
-                </motion.span>
+                <span className="relative group py-1 cursor-pointer">
+                  <span className={`text-white font-playfair text-base lg:text-lg transition-opacity duration-300 ${
+                    location === '/galerie' ? 'opacity-100 font-semibold' : 'opacity-80 group-hover:opacity-100'
+                  }`}>
+                    {t('nav.gallery')}
+                  </span>
+                  <span className={`absolute bottom-0 left-0 h-[1.5px] bg-white transition-all duration-300 ${
+                    location === '/galerie' ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`} />
+                </span>
               </Link>
               <Link href="/contact">
-                <motion.span
-                  whileHover={{ scale: 1.05 }}
-                  className={`text-white font-playfair text-base lg:text-lg hover:opacity-70 transition-opacity cursor-pointer ${
-                    location === '/contact' ? 'opacity-100 font-semibold' : 'opacity-80'
-                  }`}
-                >
-                  {t('nav.contact')}
-                </motion.span>
+                <span className="relative group py-1 cursor-pointer">
+                  <span className={`text-white font-playfair text-base lg:text-lg transition-opacity duration-300 ${
+                    location === '/contact' ? 'opacity-100 font-semibold' : 'opacity-80 group-hover:opacity-100'
+                  }`}>
+                    {t('nav.contact')}
+                  </span>
+                  <span className={`absolute bottom-0 left-0 h-[1.5px] bg-white transition-all duration-300 ${
+                    location === '/contact' ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`} />
+                </span>
               </Link>
               <LanguageSelector />
             </div>

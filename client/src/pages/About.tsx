@@ -12,7 +12,7 @@ type Page = {
 const pages: Page[] = [
   {
     title: "Introduction & l'éveil artistique",
-    photo: "/images/about/portrait.jpg",
+    photo: "https://fzyxdcdzhppdxhoiqatz.supabase.co/storage/v1/object/public/Images/about/portrait.jpg",
     paragraphs: [
       "Ivan Gauthier ? Une rencontre artistique et humaine. Retrouvant dans l'homme toute la sensibilité et la fragilité de ses œuvres, et inversement. Ivan fait partie de ces artistes dont on peut être bien entendu touché directement, simplement par ses œuvres, mais dont la connaissance du parcours, la rencontre avec l'artiste, et l'explication de son intention donnent des clés de lecture et permettent de plus encore d'en apprécier les œuvres. Ivan Gauthier est jeune par son âge, mais surprenant de maturité tant artistique qu'émotionnelle, humaine…",
       "Artiste autodidacte, il porte en lui un bagage personnel et émotionnel puissant dont témoignent autant sa singularité artistique que son tempérament. Vous ne serez donc pas étonné(e) d'apprendre que ces personnages qu'il peint ont tous une part d'autoportrait…",
@@ -23,7 +23,7 @@ const pages: Page[] = [
   },
   {
     title: "Ivan Gauthier à Paris : entre perdition et découverte",
-    photo: "/images/about/photo-2.jpg",
+    photo: "https://fzyxdcdzhppdxhoiqatz.supabase.co/storage/v1/object/public/Images/about/photo-2.jpg",
     paragraphs: [
       "Très jeune, Ivan Gauthier comprend que son avenir personnel, et artistique, est ailleurs… et en l'occurrence à Paris. Il s'y rend une première fois à 16 ans, déterminé, pour s'y installer définitivement à 19 ans.",
       "Il s'y nourrit bien entendu de l'effervescence et de la richesse culturelle des expositions, musées, galeries, mais aussi son amour pour des figures emblématiques comme Victor Hugo et Arthur Rimbaud. Il explore également le monde de la mode, de la création, et du théâtre, aux cours au Cours Florent. Insatiable… Il y fait aussi de nombreuses rencontres, qu'elles soient artistiques, professionnelles ou personnelles. Grâce à cela il vend ses premières œuvres et se construit un tissu relationnel qui lui ouvre les portes d'une élite qu'il fréquente. Il organise des dîners chez lui pour y recevoir amateurs d'Art, collectionneurs, et il vend à peu près tout ce qu'il produit.",
@@ -32,7 +32,7 @@ const pages: Page[] = [
   },
   {
     title: "Le style, les œuvres d'Ivan Gauthier",
-    photo: "/images/about/photo-3.jpg",
+    photo: "https://fzyxdcdzhppdxhoiqatz.supabase.co/storage/v1/object/public/Images/about/photo-3.jpg",
     paragraphs: [
       "Le talent d'Ivan Gauthier est le fruit de ce que la vie lui a offert, et aiguisé : sa sensibilité humaine. Son art capture le contraste entre ce qui est offert au regard, et la vérité qu'elle dissimule, qu'il ressent. Telle la mélancolie des visages qu'il peint, et l'éclat des couleurs vives, révélant un paradoxe saisissant. Sa sensibilité exacerbée lui permet de \"voir\" au-delà des apparences. Il ne cherche pas en fait à créer de l'émotion, mais à la faire apparaître. « Je ne suis pas différent des autres même si c'est ce que l'on m'a fait ressentir. Car, tous, nous sommes revêtus d'un paraître plus ou moins prononcé masquant l'Être. Et ce sont bien souvent les personnes les plus malheureuses qui sont les plus chatoyantes ». Raison pour laquelle chacun de ses portraits est imprégné d'une part de lui-même, comme ses sourcils… L'art pour Ivan est un moyen de se rapprocher des autres, dans tous les sens du terme. Un lien, une expérience partagée avec ceux qui observent ses créations. « Plus les gens apprécient mon travail, plus je me sens inspiré, déterminé à peindre ». Pour lui, l'art est une manière de voir et d'être vu, un moyen de communiquer sa vision sensible du monde humain.",
       "L'œuvre d'Ivan Gauthier oscille entre la spontanéité du trait du dessin, brut, impulsif, et une figuration plus étudiée, méticuleuse en peinture sur toile. S'il lui arrive d'explorer le champ des possibles du paysage, de la nature morte, le portrait reste son sujet de prédilection. Mais quelle que soit l'œuvre, le sujet, le support, son style est éminemment reconnaissable, ce qui témoigne d'une puissance et d'une maturité artistique rares pour un si jeune artiste…",
@@ -41,7 +41,7 @@ const pages: Page[] = [
   },
   {
     title: "Conclusion : un talent bouillonnant…",
-    photo: "/images/about/photo-4.jpg",
+    photo: "https://fzyxdcdzhppdxhoiqatz.supabase.co/storage/v1/object/public/Images/about/photo-4.jpg",
     paragraphs: [
       "Ivan Gauthier est un Artiste auquel nous mettons une majuscule sans hésiter. Pour le niveau artistique, le tempérament, la maturité, le parcours. Et pourtant si jeune, et 280 œuvres à son actif qui sont pour la très grande majorité au sein de collections d'amateurs d'Art avertis. Son énergie sert sa détermination et inversement. Avide d'Art, d'émotion, de sensibilité, mais aussi séducteur au sens « dandy » du terme… Ivan Gauthier est un jeune homme très cultivé, doté d'excellentes manières et doué d'une éloquence devenue rare pour sa génération. Ce qui le rend étonnant, surprenant, et pour le moins captivant, à l'image de sa peinture. Bouillonnant ? Par les envies de création qui l'habitent, comme récemment où il a jeté son dévolu sur la photographie, que nous serons bientôt heureux de vous présenter aussi.",
     ],
@@ -164,44 +164,53 @@ export default function About() {
               <div
                 key={index}
                 ref={(el) => { sectionRefs.current[index] = el; }}
-                className="grid md:grid-cols-[minmax(0,340px)_1fr] gap-8 md:gap-12 items-start"
+                className="grid md:grid-cols-[minmax(0,340px)_1fr] gap-8 md:gap-14 items-start"
               >
-                <div className="mx-auto md:mx-0 w-full max-w-xs md:max-w-none md:sticky md:top-40">
+                <div className="mx-auto md:mx-0 w-full max-w-xs md:max-w-none md:sticky md:top-36">
                   <motion.div
-                    className="aspect-[3/4] rounded-xl overflow-hidden border border-white/10 shadow-2xl"
-                    initial={{ opacity: 0, scale: 0.96 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true, margin: "-10%" }}
-                    transition={{ duration: 0.6 }}
+                    className="group aspect-[3/4] rounded-2xl overflow-hidden border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-sm"
+                    initial={{ opacity: 0, y: 40, scale: 0.94 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, margin: "-12%" }}
+                    transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+                    whileHover={{ scale: 1.02 }}
                   >
-                    <img
+                    <motion.img
                       src={page.photo}
                       alt={`Ivan Gauthier — ${page.title}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
                       loading="lazy"
                       width="600"
                       height="800"
                     />
                   </motion.div>
-                  <p className="text-white/40 text-xs uppercase tracking-widest text-center mt-3">
-                    {index + 1} / {pages.length}
-                  </p>
+                  <motion.p 
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.4 }}
+                    className="text-white/40 text-xs uppercase tracking-[0.25em] text-center mt-4"
+                  >
+                    {index + 1} — {pages.length}
+                  </motion.p>
                 </div>
 
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 35 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-10%" }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-playfair text-white mb-6">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-playfair text-white mb-6 leading-tight">
                     {page.title}
                   </h2>
-                  {page.paragraphs.map((p, pi) => (
-                    <p key={pi} className="text-base sm:text-lg text-white/75 leading-relaxed mb-4 sm:mb-5">
-                      <TranslatedText text={p} />
-                    </p>
-                  ))}
+                  <div className="space-y-4 sm:space-y-5">
+                    {page.paragraphs.map((p, pi) => (
+                      <p key={pi} className="text-base sm:text-lg text-white/80 leading-relaxed font-light">
+                        <TranslatedText text={p} />
+                      </p>
+                    ))}
+                  </div>
                 </motion.div>
               </div>
             ))}

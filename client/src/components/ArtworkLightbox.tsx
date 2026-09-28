@@ -22,12 +22,16 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const [glare, setGlare] = useState({ x: 50, y: 50, opacity: 0 });
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     if (!isOpen) {
       setIsImageLoaded(false);
       setCurrentImageIndex(0);
+      setTilt({ rotateX: 0, rotateY: 0 });
+      setGlare({ x: 50, y: 50, opacity: 0 });
     }
   }, [isOpen]);
 
@@ -50,6 +54,29 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
     setIsAnimating(true);
     setCurrentImageIndex((prev) => (prev < allImages.length - 1 ? prev + 1 : 0));
     setTimeout(() => setIsAnimating(false), 300);
+  };
+
+  // Gestion de l'inclinaison physique 3D et du reflet en grand format
+  const handleImageMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = ((y - centerY) / centerY) * -8;
+    const rotateY = ((x - centerX) / centerX) * 8;
+
+    const glareX = (x / rect.width) * 100;
+    const glareY = (y / rect.height) * 100;
+
+    setTilt({ rotateX, rotateY });
+    setGlare({ x: glareX, y: glareY, opacity: 1 });
+  };
+
+  const handleImageMouseLeave = () => {
+    setTilt({ rotateX: 0, rotateY: 0 });
+    setGlare(prev => ({ ...prev, opacity: 0 }));
   };
 
   // Gestion du swipe tactile
@@ -105,55 +132,86 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
+          className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4"
           role="dialog" aria-modal="true"
           onClick={onClose}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: reduceMotion ? 0.3 : 0.45, ease: "easeInOut" }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         >
           <motion.div
-            className="relative w-[95vw] h-[95vh] sm:w-[90vw] sm:h-[90vh] overflow-hidden rounded-lg bg-black/50 will-change-transform"
+            className="relative w-[96vw] h-[95vh] sm:w-[92vw] sm:h-[90vh] overflow-hidden rounded-2xl bg-black/50 border border-white/10 will-change-transform flex flex-col justify-between"
             onClick={onClose}
-            initial={{ scale: reduceMotion ? 1 : 0.97, opacity: 0, y: reduceMotion ? 0 : 12 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: reduceMotion ? 1 : 0.97, opacity: 0, y: reduceMotion ? 0 : -12 }}
-            transition={{ duration: reduceMotion ? 0.3 : 0.5, ease: "easeInOut" }}
+            initial={{ scale: 0.88, rotateX: 6, opacity: 0, filter: "blur(8px)" }}
+            animate={{ scale: 1, rotateX: 0, opacity: 1, filter: "blur(0px)" }}
+            exit={{ scale: 0.9, rotateX: -4, opacity: 0, filter: "blur(8px)" }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            style={{ perspective: 1200 }}
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 z-20 bg-black/60 rounded-full p-1.5 sm:p-2 hover:bg-white/20 transition-all duration-300 shadow-md border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+              className="absolute top-4 right-4 z-30 bg-black/60 hover:bg-white/20 rounded-full p-2 transition-all duration-300 shadow-md border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               aria-label="Fermer la fenêtre d'aperçu"
             >
-              <X className="text-white" size={18} />
+              <X className="text-white" size={20} />
             </button>
             
+            {/* Zone d'affichage de l'œuvre avec physique 3D et reflet */}
             <div 
-              className="relative w-full h-[85%] sm:h-[90%]"
+              className="relative w-full flex-1 flex items-center justify-center p-2 sm:p-6 overflow-hidden"
               onTouchStart={(e) => { e.stopPropagation(); onTouchStart(e); }}
               onTouchMove={(e) => { e.stopPropagation(); onTouchMove(e); }}
               onTouchEnd={(e) => { e.stopPropagation(); onTouchEnd(); }}
             >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.img 
-                  key={currentImageIndex}
-                  src={allImages[currentImageIndex]} 
-                  alt={`${artwork?.title || ""} - Image ${currentImageIndex + 1}`}
-                  className="w-full h-full object-contain transform-gpu will-change-transform"
-                  onLoad={() => setIsImageLoaded(true)}
-                  onClick={(e) => e.stopPropagation()}
-                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.995 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: reduceMotion ? 1 : 1.005 }}
-                  transition={{ duration: reduceMotion ? 0.25 : 0.45, ease: "easeInOut" }}
-                  loading="eager"
-                  decoding="async"
-                  fetchPriority="high"
+              <motion.div
+                animate={{
+                  rotateX: tilt.rotateX,
+                  rotateY: tilt.rotateY,
+                  scale: glare.opacity ? 1.02 : 1,
+                }}
+                transition={{ type: "spring", stiffness: 260, damping: 24, mass: 0.7 }}
+                style={{
+                  perspective: 1200,
+                  transformStyle: "preserve-3d",
+                }}
+                onMouseMove={handleImageMouseMove}
+                onMouseLeave={handleImageMouseLeave}
+                onClick={(e) => e.stopPropagation()}
+                className="relative max-h-full max-w-full flex items-center justify-center rounded-xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.9)] cursor-pointer"
+              >
+                {/* Reflet dynamique de vernis / lumière qui suit la souris sur la toile agrandie */}
+                <div
+                  className="absolute inset-0 z-20 pointer-events-none transition-opacity duration-300"
+                  style={{
+                    opacity: glare.opacity ? 0.35 : 0,
+                    background: `radial-gradient(circle 350px at ${glare.x}% ${glare.y}%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.06) 45%, transparent 80%)`,
+                    mixBlendMode: "overlay",
+                  }}
                 />
-              </AnimatePresence>
+
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.img 
+                    key={currentImageIndex}
+                    src={allImages[currentImageIndex]} 
+                    alt={`${artwork?.title || ""} - Image ${currentImageIndex + 1}`}
+                    className="max-h-[72vh] sm:max-h-[76vh] w-auto max-w-full object-contain rounded-xl select-none block transform-gpu will-change-transform"
+                    onLoad={() => setIsImageLoaded(true)}
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.02 }}
+                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                  />
+                </AnimatePresence>
+
+                {/* Subtile bordure satinée autour de la toile */}
+                <div className="absolute inset-0 rounded-xl pointer-events-none border border-white/10" />
+              </motion.div>
               
-              {/* Navigation arrows */}
+              {/* Flèches de navigation d'images multiples */}
               {hasMultipleImages && (
                 <>
                   <motion.button
@@ -162,14 +220,8 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
                       e.stopPropagation();
                       goToPrevious();
                     }}
-                    className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/60 rounded-full p-2 sm:p-3 shadow-md border border-white/20 focus-visible:outline-none cursor-pointer select-none touch-manipulation active:!bg-black/60 focus:!bg-black/60"
+                    className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-black/90 rounded-full p-2.5 sm:p-3 shadow-md border border-white/20 focus-visible:outline-none cursor-pointer select-none"
                     aria-label="Image précédente"
-                    whileHover={{}}
-                    whileTap={{}}
-                    transition={{ duration: 0 }}
-                    style={{ willChange: 'auto', WebkitTapHighlightColor: 'transparent', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' as any }}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onTouchStart={(e) => e.stopPropagation()}
                   >
                     <span className="text-white text-lg sm:text-xl font-bold">‹</span>
                   </motion.button>
@@ -179,14 +231,8 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
                       e.stopPropagation();
                       goToNext();
                     }}
-                    className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/60 rounded-full p-2 sm:p-3 shadow-md border border-white/20 focus-visible:outline-none cursor-pointer select-none touch-manipulation active:!bg-black/60 focus:!bg-black/60"
+                    className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-black/90 rounded-full p-2.5 sm:p-3 shadow-md border border-white/20 focus-visible:outline-none cursor-pointer select-none"
                     aria-label="Image suivante"
-                    whileHover={{}}
-                    whileTap={{}}
-                    transition={{ duration: 0 }}
-                    style={{ willChange: 'auto', WebkitTapHighlightColor: 'transparent', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' as any }}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onTouchStart={(e) => e.stopPropagation()}
                   >
                     <span className="text-white text-lg sm:text-xl font-bold">›</span>
                   </motion.button>
@@ -194,20 +240,19 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
               )}
             </div>
             
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 sm:p-6 md:p-8">
-              {/* Image indicators */}
+            {/* Panneau d'informations en bas */}
+            <div className="bg-gradient-to-t from-black via-black/90 to-transparent p-4 sm:p-6 md:p-8 shrink-0">
+              {/* Indicateurs de vignettes pour œuvres multi-vues */}
               {hasMultipleImages && (
-                <div className="flex justify-center gap-1.5 sm:gap-2 mb-3 sm:mb-4" onClick={(e) => e.stopPropagation()}>
+                <div className="flex justify-center gap-2 mb-3" onClick={(e) => e.stopPropagation()}>
                   {allImages.map((_, index) => (
                     <motion.button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${
-                        index === currentImageIndex ? 'bg-white' : 'bg-white/40 hover:bg-white/60'
+                      className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-all ${
+                        index === currentImageIndex ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/60'
                       }`}
                       aria-label={`Aller à l'image ${index + 1}`}
-                      animate={{ opacity: index === currentImageIndex ? 1 : 0.6 }}
-                      transition={{ duration: 0.15 }}
                     />
                   ))}
                 </div>
@@ -226,7 +271,6 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
                         </p>
                       )}
                     </div>
-                    {/* Description cachée sur mobile */}
                     {hasDetailValue(artwork.description) && (
                       <div className="text-right text-sm sm:text-base max-w-md hidden md:block opacity-70 will-change-transform">
                         <p className="line-clamp-2"><TranslatedText text={artwork.description || ''} /></p>

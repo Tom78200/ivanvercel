@@ -6,17 +6,28 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useArtworkTranslations } from "@/utils/translations";
 import { ChevronRight } from "lucide-react";
 import ArtworkLightbox from "@/components/ArtworkLightbox";
+import GalerieRowCard from "@/components/GalerieRowCard";
 import type { Artwork } from "@shared/schema";
 
 export default function Galerie() {
   const { data: artworks } = useArtworks();
   const data = Array.isArray(artworks) ? artworks : [];
   const scrollersRef = useRef<Record<string, HTMLDivElement | null>>({});
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [activeRow, setActiveRow] = useState<string | null>(null);
   const { t } = useLanguage();
   const { translateCategory } = useArtworkTranslations();
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  // Catégories présentes dans les données
+  const availableCategories = ARTWORK_CATEGORIES.filter(c => 
+    c !== 'Autres' && data.some(a => normalize(a.category) === normalize(c))
+  );
+
+  const categoriesToShow = selectedCategory === "all" 
+    ? ARTWORK_CATEGORIES.filter(c => c !== 'Autres')
+    : [selectedCategory];
 
   const openLightbox = (artwork: Artwork) => {
     setSelectedArtwork(artwork);
@@ -92,10 +103,22 @@ export default function Galerie() {
     return () => clearTimeout(timer);
   }, [data]);
   return (
-    <div className="min-h-screen bg-black text-white pt-16 sm:pt-20 md:pt-28">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      className="min-h-screen bg-black text-white pt-16 sm:pt-20 md:pt-28"
+    >
+      {/* Rideau noir court créant l'effet d'obscurité totale puis allumage des projecteurs de la galerie */}
+      <motion.div
+        initial={{ opacity: 1 }}
+        animate={{ opacity: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="fixed inset-0 bg-black z-40 pointer-events-none"
+      />
       <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-10 md:py-12">
         <motion.h1 
-          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-playfair mb-6 sm:mb-8 md:mb-10"
+          className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-playfair mb-6 sm:mb-8"
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ 
@@ -106,11 +129,38 @@ export default function Galerie() {
         >
           {t('gallery.title')}
         </motion.h1>
+
+        {/* Filtres de catégories chic avec animation physique layout */}
+        <div className="flex flex-wrap gap-2 sm:gap-3 mb-10 sm:mb-12">
+          {["all", ...availableCategories].map((catKey) => {
+            const isActive = selectedCategory === catKey;
+            const label = catKey === "all" ? (t('category.all') || "Toutes les œuvres") : translateCategory(catKey);
+            return (
+              <button
+                key={catKey}
+                onClick={() => setSelectedCategory(catKey)}
+                className="relative px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors duration-300 focus:outline-none cursor-pointer"
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeCategoryPill"
+                    className="absolute inset-0 bg-white rounded-full"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <span className={`relative z-10 transition-colors duration-200 ${isActive ? "text-black font-semibold" : "text-white/70 hover:text-white"}`}>
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
         {data.length === 0 ? (
           <div className="text-white/60">{t('gallery.no-artworks')}</div>
         ) : (
-          <div className="space-y-8 sm:space-y-10 md:space-y-12">
-            {ARTWORK_CATEGORIES.filter(c => c !== 'Autres').map((cat, catIndex) => {
+          <motion.div layout className="space-y-8 sm:space-y-10 md:space-y-12">
+            {categoriesToShow.map((cat, catIndex) => {
               const list = data.filter(a => normalize(a.category) === normalize(cat));
               if (list.length === 0) return null;
               return (
@@ -144,7 +194,7 @@ export default function Galerie() {
                     }}
                     viewport={{ once: true }}
                   >
-                    {cat}
+                    {translateCategory(cat)}
                   </motion.h2>
                   <div className="relative">
                     <motion.button 
@@ -217,9 +267,12 @@ export default function Galerie() {
                       {list.map((a, idx) => {
                         const isSelected = (selectedIndexByRow[cat] ?? 0) === idx;
                         return (
-                          <motion.button
+                          <GalerieRowCard
                             key={a.id}
-                            className={`relative inline-block mr-3 sm:mr-4 align-top snap-start rounded focus:outline-none overflow-visible transition-all duration-300 last:mr-3 sm:last:mr-4 md:last:mr-6 ${idx === 0 ? 'sm:ml-1 md:ml-2 lg:ml-3' : ''} ${isSelected ? 'scale-[1.08]' : 'opacity-85 hover:opacity-100'} `}
+                            artwork={a}
+                            isSelected={isSelected}
+                            isFirst={idx === 0}
+                            delayIndex={idx}
                             onClick={() => {
                               setActiveRow(cat);
                               setSelected(cat, idx);
@@ -228,7 +281,6 @@ export default function Galerie() {
                               if (el) {
                                 const child = (el.children[idx] as HTMLElement) || null;
                                 if (child) {
-                                  // Calcul stable pour le centrage au clic
                                   const containerWidth = el.clientWidth;
                                   const childWidth = child.clientWidth;
                                   const childLeft = child.offsetLeft;
@@ -237,38 +289,7 @@ export default function Galerie() {
                                 }
                               }
                             }}
-                            aria-label={a.title}
-                            initial={{ 
-                              opacity: 0, 
-                              scale: 0.9,
-                              filter: "blur(4px)"
-                            }}
-                            whileInView={{ 
-                              opacity: 0.85, 
-                              scale: 1,
-                              filter: "blur(0px)",
-                              transition: { 
-                                duration: 0.8, 
-                                ease: [0.25, 0.46, 0.45, 0.94],
-                                delay: catIndex * 0.2 + idx * 0.1
-                              } 
-                            }}
-                            viewport={{ once: true, margin: "-5%" }}
-                            whileHover={{ 
-                              opacity: 1,
-                              scale: 1.05,
-                              transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }
-                            }}
-                          >
-                            <div className={`relative rounded-xl overflow-visible ${isSelected ? 'before:absolute before:inset-0 before:rounded-xl before:pointer-events-none before:border-2 before:border-white/70 before:shadow-[inset_0_0_10px_rgba(255,255,255,0.35),0_0_6px_rgba(255,255,255,0.15)] after:absolute after:inset-0 after:rounded-xl after:pointer-events-none after:bg-[linear-gradient(135deg,rgba(255,255,255,0.15),rgba(255,255,255,0)_40%)]' : ''}`}>
-                              <img
-                                src={a.imageUrl}
-                                alt={a.title}
-                                className={`h-36 sm:h-44 md:h-56 w-auto object-contain rounded-xl border ${isSelected ? 'border-white/30' : 'border-white/10'} bg-black/20 transition-all duration-300`}
-                                loading="lazy"
-                              />
-                            </div>
-                          </motion.button>
+                          />
                         );
                       })}
                     </div>
@@ -305,7 +326,7 @@ export default function Galerie() {
                 </motion.div>
               );
             })}
-            {(() => {
+            {(selectedCategory === 'all' || selectedCategory === 'Autres') && (() => {
               const list = data.filter(a => !ARTWORK_CATEGORIES.some(c => c !== 'Autres' && normalize(a.category) === normalize(c)));
               if (list.length === 0) return null;
               return (
@@ -353,9 +374,12 @@ export default function Galerie() {
                         const rowKey = 'Autres';
                         const isSelected = (selectedIndexByRow[rowKey] ?? 0) === idx;
                         return (
-                          <motion.button
+                          <GalerieRowCard
                             key={a.id}
-                            className={`relative inline-block mr-3 sm:mr-4 align-top snap-start rounded focus:outline-none overflow-visible transition-all duration-300 last:mr-3 sm:last:mr-4 md:last:mr-6 ${idx === 0 ? 'sm:ml-1 md:ml-2 lg:ml-3' : ''} ${isSelected ? 'scale-[1.08]' : 'opacity-85 hover:opacity-100'} `}
+                            artwork={a}
+                            isSelected={isSelected}
+                            isFirst={idx === 0}
+                            delayIndex={idx}
                             onClick={() => {
                               setActiveRow(rowKey);
                               setSelected(rowKey, idx);
@@ -364,7 +388,6 @@ export default function Galerie() {
                               if (el) {
                                 const child = (el.children[idx] as HTMLElement) || null;
                                 if (child) {
-                                  // Calcul stable pour le centrage au clic
                                   const containerWidth = el.clientWidth;
                                   const childWidth = child.clientWidth;
                                   const childLeft = child.offsetLeft;
@@ -373,38 +396,7 @@ export default function Galerie() {
                                 }
                               }
                             }}
-                            aria-label={a.title}
-                            initial={{ 
-                              opacity: 0, 
-                              scale: 0.9,
-                              filter: "blur(4px)"
-                            }}
-                            whileInView={{ 
-                              opacity: 0.85, 
-                              scale: 1,
-                              filter: "blur(0px)",
-                              transition: { 
-                                duration: 0.8, 
-                                ease: [0.25, 0.46, 0.45, 0.94],
-                                delay: ARTWORK_CATEGORIES.filter(c => c !== 'Autres').length * 0.2 + idx * 0.1
-                              } 
-                            }}
-                            viewport={{ once: true, margin: "-5%" }}
-                            whileHover={{ 
-                              opacity: 1,
-                              scale: 1.05,
-                              transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }
-                            }}
-                          >
-                            <div className={`relative rounded-xl overflow-visible ${isSelected ? 'before:absolute before:inset-0 before:rounded-xl before:pointer-events-none before:border-2 before:border-white/70 before:shadow-[inset_0_0_10px_rgba(255,255,255,0.35),0_0_6px_rgba(255,255,255,0.15)] after:absolute after:inset-0 after:rounded-xl after:pointer-events-none after:bg-[linear-gradient(135deg,rgba(255,255,255,0.15),rgba(255,255,255,0)_40%)]' : ''}`}>
-                              <img
-                                src={a.imageUrl}
-                                alt={a.title}
-                                className={`h-36 sm:h-44 md:h-56 w-auto object-contain rounded-xl border ${isSelected ? 'border-white/30' : 'border-white/10'} bg-black/20 transition-all duration-300`}
-                                loading="lazy"
-                              />
-                            </div>
-                          </motion.button>
+                          />
                         );
                       })}
                     </div>
@@ -418,7 +410,7 @@ export default function Galerie() {
                 </motion.div>
               );
             })()}
-          </div>
+          </motion.div>
         )}
       </section>
       <ArtworkLightbox
@@ -426,7 +418,7 @@ export default function Galerie() {
         isOpen={isLightboxOpen}
         onClose={closeLightbox}
       />
-    </div>
+    </motion.div>
   );
 }
 

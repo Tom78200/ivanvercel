@@ -2,6 +2,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 // Mapping des catégories vers les clés de traduction
 const CATEGORY_TRANSLATION_MAP: Record<string, string> = {
+  'Aquarelle': 'category.aquarelle',
+  'Peinture': 'category.peinture',
+  'Technique mixte': 'category.technique_mixte',
   'Portrait': 'category.portrait',
   'Paysage': 'category.paysage',
   'Abstraction': 'category.abstraction',

@@ -2,52 +2,80 @@ import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 
 function AnimatedBackgroundInner() {
-  // Respecter prefers-reduced-motion
   const prefersReduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReduced) {
     return <div className="fixed inset-0 -z-10" />;
   }
 
-  // Pré-calcule des positions et durées pour éviter Math.random à chaque render
   const particles = useMemo(() => {
-    const count = window.innerWidth < 768 ? 8 : 16; // moins de particules sur mobile
+    const isClient = typeof window !== "undefined";
+    const width = isClient ? window.innerWidth : 1200;
+    const height = isClient ? window.innerHeight : 800;
+    const count = width < 768 ? 12 : 24;
     return Array.from({ length: count }).map((_, i) => ({
       key: i,
-      x0: Math.random() * window.innerWidth,
-      y0: Math.random() * window.innerHeight,
-      x1: Math.random() * window.innerWidth,
-      y1: Math.random() * window.innerHeight,
-      duration: 18 + Math.random() * 14,
+      x0: Math.random() * width,
+      y0: Math.random() * height,
+      x1: Math.random() * width,
+      y1: Math.random() * height,
+      size: Math.random() > 0.7 ? 2 : 1.5,
+      opacity: 0.15 + Math.random() * 0.2,
+      duration: 12 + Math.random() * 10,
     }));
   }, []);
 
   return (
-    <div className="fixed inset-0 overflow-hidden -z-10 will-change-transform">
+    <div className="fixed inset-0 overflow-hidden -z-10 pointer-events-none will-change-transform">
+      {/* Particules subtiles */}
       {particles.map((p) => (
         <motion.div
           key={p.key}
-          className="absolute w-1 h-1 bg-foreground opacity-10 rounded-full"
-          initial={{ x: p.x0, y: p.y0 }}
-          animate={{ x: p.x1, y: p.y1 }}
-          transition={{ duration: p.duration, repeat: Infinity, ease: "linear", repeatType: "mirror" }}
+          className="absolute bg-white rounded-full"
+          style={{ width: p.size, height: p.size }}
+          initial={{ x: p.x0, y: p.y0, opacity: p.opacity * 0.5 }}
+          animate={{
+            x: [p.x0, p.x1, p.x0],
+            y: [p.y0, p.y1, p.y0],
+            opacity: [p.opacity * 0.4, p.opacity, p.opacity * 0.4],
+          }}
+          transition={{
+            duration: p.duration,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
         />
       ))}
 
-      {/* Orbes: réduites et animées via transform uniquement */}
+      {/* Orbes vaporeuses lentes */}
       <motion.div
-        className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-white/5 to-white/0 rounded-full blur-3xl"
-        animate={{ scale: [1, 1.1, 1], opacity: [0.16, 0.1, 0.16] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute -top-20 -left-20 w-96 h-96 bg-gradient-to-br from-blue-500/10 via-white/5 to-transparent rounded-full blur-3xl"
+        animate={{
+          x: [0, 60, -30, 0],
+          y: [0, 40, -20, 0],
+          scale: [1, 1.15, 0.95, 1],
+          opacity: [0.2, 0.35, 0.2],
+        }}
+        transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute top-2/3 right-1/4 w-64 h-64 bg-gradient-to-r from-white/5 to-white/0 rounded-full blur-3xl"
-        animate={{ scale: [1.1, 1, 1.1], opacity: [0.1, 0.16, 0.1] }}
-        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-1/2 -right-20 w-[28rem] h-[28rem] bg-gradient-to-bl from-purple-500/8 via-white/5 to-transparent rounded-full blur-3xl"
+        animate={{
+          x: [0, -50, 30, 0],
+          y: [0, -60, 40, 0],
+          scale: [1.1, 0.95, 1.15, 1.1],
+          opacity: [0.15, 0.3, 0.15],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute top-1/2 left-1/2 w-56 h-56 bg-gradient-to-r from-white/5 to-white/0 rounded-full blur-3xl"
-        animate={{ scale: [1, 1.15, 1], opacity: [0.12, 0.06, 0.12] }}
-        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute -bottom-20 left-1/3 w-80 h-80 bg-gradient-to-t from-blue-400/8 via-white/5 to-transparent rounded-full blur-3xl"
+        animate={{
+          x: [0, 40, -40, 0],
+          y: [0, -30, 20, 0],
+          scale: [0.95, 1.1, 1, 0.95],
+          opacity: [0.18, 0.28, 0.18],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
       />
     </div>
   );

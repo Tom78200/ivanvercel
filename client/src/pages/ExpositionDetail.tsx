@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useExhibitions } from "@/hooks/use-exhibitions";
 import { useLocation } from "wouter";
 import { ArrowLeft, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import TranslatedText from "@/components/TranslatedText";
 
 export default function ExpositionDetail() {
@@ -10,11 +10,30 @@ export default function ExpositionDetail() {
   const [, setLocation] = useLocation();
   const exhibitionId = window.location.pathname.split("/").pop();
   const exhibition = exhibitions?.find(expo => expo.id === Number(exhibitionId));
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     // Faire défiler la page vers le haut au chargement
     window.scrollTo(0, 0);
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsExpanded(false);
+      }
+    };
+    if (isExpanded) {
+      document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", handleKeyDown);
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isExpanded]);
 
   if (!exhibition) {
     return (
@@ -77,7 +96,7 @@ export default function ExpositionDetail() {
               <TranslatedText text={exhibition.title} />
             </h1>
             <p className="text-xl text-white/80">
-              <TranslatedText text={exhibition.location} /> • {exhibition.year}
+              <TranslatedText text={exhibition.location} />{exhibition.year ? ` • ${exhibition.year}` : ''}
             </p>
             {(exhibition as any).theme && (
               <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full bg-white/15 border border-white/25 backdrop-blur-sm">
@@ -85,15 +104,25 @@ export default function ExpositionDetail() {
               </div>
             )}
             {exhibition.description && (
-              <p className="mt-4 text-lg md:text-xl text-white/80 max-w-3xl leading-relaxed">
-                <TranslatedText text={exhibition.description} />
-              </p>
+              <div className="mt-4 max-w-3xl">
+                <p className="text-lg md:text-xl text-white/80 leading-relaxed line-clamp-2 md:line-clamp-3">
+                  <TranslatedText text={exhibition.description} />
+                </p>
+                {exhibition.description.length > 120 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsExpanded(true)}
+                    className="mt-2.5 inline-flex items-center gap-1.5 text-base text-white/90 hover:text-white underline underline-offset-4 cursor-pointer transition-colors"
+                  >
+                    <span>Lire la suite</span>
+                    <span>↓</span>
+                  </button>
+                )}
+              </div>
             )}
           </motion.div>
         </div>
       </section>
-
-      {/* Description (section complémentaire retirée, description déplacée dans le hero) */}
 
       {/* Galerie d'images */}
       <section className="py-16 px-4">
@@ -103,14 +132,199 @@ export default function ExpositionDetail() {
           </motion.div>
         </div>
       </section>
+
+      {/* Ouverture somptueuse du texte avec fond teinté */}
+      <AnimatePresence>
+        {isExpanded && exhibition.description && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10 bg-black/80 backdrop-blur-md"
+            onClick={() => setIsExpanded(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-3xl max-h-[85vh] bg-[#0c0c0e]/95 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-[0_30px_90px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden"
+            >
+              {/* En-tête de la carte */}
+              <div className="flex items-start justify-between p-6 md:p-8 pb-4 border-b border-white/10 shrink-0">
+                <div className="pr-6">
+                  <span className="inline-block text-[11px] uppercase tracking-[0.25em] text-white/50 font-medium mb-1.5">
+                    L'histoire de l'exposition
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-playfair text-white leading-tight">
+                    <TranslatedText text={exhibition.title} />
+                  </h2>
+                  <p className="text-sm md:text-base text-white/60 mt-1">
+                    <TranslatedText text={exhibition.location} />{exhibition.year ? ` • ${exhibition.year}` : ''}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(false)}
+                  className="p-2 -mr-2 -mt-2 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+                  aria-label="Fermer"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Texte complet somptueux */}
+              <div className="overflow-y-auto p-6 md:p-8 py-6 text-white/90 text-base sm:text-lg md:text-xl font-light leading-relaxed whitespace-pre-line space-y-4">
+                <TranslatedText text={exhibition.description} />
+              </div>
+
+              {/* Pied de carte */}
+              <div className="p-4 md:p-6 pt-3 border-t border-white/10 flex justify-between items-center shrink-0">
+                <span className="text-xs text-white/40 italic">Ivan Gauthier</span>
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(false)}
+                  className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white underline underline-offset-4 cursor-pointer transition-colors"
+                >
+                  <span>Fermer</span>
+                  <span>↑</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-} 
+}
+
+function ExpositionPhotoCard({ 
+  image, 
+  onClick 
+}: { 
+  image: { url: string; caption: string; originalIndex: number }; 
+  onClick: () => void;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const [glare, setGlare] = useState({ x: 50, y: 50, opacity: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = ((y - centerY) / centerY) * -10;
+    const rotateY = ((x - centerX) / centerX) * 10;
+
+    const glareX = (x / rect.width) * 100;
+    const glareY = (y / rect.height) * 100;
+
+    setTilt({ rotateX, rotateY });
+    setGlare({ x: glareX, y: glareY, opacity: 1 });
+  };
+
+  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setTilt({ rotateX: 0, rotateY: 0 });
+    setGlare(prev => ({ ...prev, opacity: 0 }));
+  };
+
+  return (
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, y: 25 }}
+      whileInView={{ opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] } }}
+      viewport={{ once: true, margin: "-10%" }}
+      style={{ perspective: 1000 }}
+      className="cursor-pointer select-none"
+      onClick={onClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      <motion.div
+        animate={{
+          rotateX: tilt.rotateX,
+          rotateY: tilt.rotateY,
+          scale: isHovered ? 1.03 : 1,
+          y: isHovered ? -6 : 0,
+        }}
+        transition={{ type: "spring", stiffness: 280, damping: 24, mass: 0.8 }}
+        style={{
+          transformStyle: "preserve-3d",
+          transformOrigin: "center center",
+        }}
+        className="group relative rounded-xl overflow-hidden bg-neutral-950/70 border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-shadow duration-500 hover:shadow-[0_25px_60px_rgba(0,0,0,0.9)] hover:border-white/25"
+      >
+        {/* Reflet dynamique de vernis / lumière qui suit la souris */}
+        <div
+          className="absolute inset-0 z-20 pointer-events-none transition-opacity duration-300"
+          style={{
+            opacity: glare.opacity ? 0.35 : 0,
+            background: `radial-gradient(circle 280px at ${glare.x}% ${glare.y}%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 40%, transparent 80%)`,
+            mixBlendMode: "overlay",
+          }}
+        />
+
+        <motion.img
+          src={image.url}
+          alt={image.caption}
+          className="w-full h-auto object-cover transform-gpu will-change-transform"
+          animate={{ scale: isHovered ? 1.05 : 1 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        />
+
+        {/* Voile de légende */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+          <p className="text-white font-medium text-base sm:text-lg drop-shadow-md">
+            <TranslatedText text={image.caption} />
+          </p>
+        </div>
+
+        {/* Bordure satinée */}
+        <div className="absolute inset-0 rounded-xl pointer-events-none border border-white/10 group-hover:border-white/20 transition-colors" />
+      </motion.div>
+    </motion.div>
+  );
+}
 
 function ExpositionMasonry({ images }: { images: { url: string; caption: string }[] }) {
   const [columns, setColumns] = useState(3);
   const [ratios, setRatios] = useState<number[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const [lightboxTilt, setLightboxTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const [lightboxGlare, setLightboxGlare] = useState({ x: 50, y: 50, opacity: 0 });
+
+  const handleLightboxMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = ((y - centerY) / centerY) * -8;
+    const rotateY = ((x - centerX) / centerX) * 8;
+
+    const glareX = (x / rect.width) * 100;
+    const glareY = (y / rect.height) * 100;
+
+    setLightboxTilt({ rotateX, rotateY });
+    setLightboxGlare({ x: glareX, y: glareY, opacity: 1 });
+  };
+
+  const handleLightboxMouseLeave = () => {
+    setLightboxTilt({ rotateX: 0, rotateY: 0 });
+    setLightboxGlare(prev => ({ ...prev, opacity: 0 }));
+  };
 
   const goToPrevious = () => {
     setLightboxIndex((prev) => (prev === null ? null : (prev > 0 ? prev - 1 : images.length - 1)));
@@ -120,7 +334,11 @@ function ExpositionMasonry({ images }: { images: { url: string; caption: string 
   };
 
   useEffect(() => {
-    if (lightboxIndex === null) return;
+    if (lightboxIndex === null) {
+      setLightboxTilt({ rotateX: 0, rotateY: 0 });
+      setLightboxGlare({ x: 50, y: 50, opacity: 0 });
+      return;
+    }
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setLightboxIndex(null);
       if (e.key === 'ArrowLeft') goToPrevious();
@@ -184,26 +402,12 @@ function ExpositionMasonry({ images }: { images: { url: string; caption: string 
       <div className="grid gap-8" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0,1fr))` }}>
         {cols.map((col, ci) => (
           <div key={ci} className="flex flex-col gap-8">
-            {col.map((image, index) => (
-              <motion.div
-                key={`c${ci}-img-${index}`}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] } }}
-                viewport={{ once: true, margin: "-10%" }}
-                className="rounded-lg overflow-hidden group cursor-pointer relative"
+            {col.map((image) => (
+              <ExpositionPhotoCard
+                key={`col-${ci}-${image.originalIndex}`}
+                image={image}
                 onClick={() => setLightboxIndex(image.originalIndex)}
-              >
-                <img
-                  src={image.url}
-                  alt={image.caption}
-                  className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <p className="text-white font-medium text-lg">
-                    <TranslatedText text={image.caption} />
-                  </p>
-                </div>
-              </motion.div>
+              />
             ))}
           </div>
         ))}
@@ -212,17 +416,17 @@ function ExpositionMasonry({ images }: { images: { url: string; caption: string 
       <AnimatePresence>
         {lightboxIndex !== null && (
           <motion.div
-            className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
+            className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-3 sm:p-6 backdrop-blur-md"
             role="dialog" aria-modal="true"
             onClick={() => setLightboxIndex(null)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.35 }}
           >
             <button
               onClick={() => setLightboxIndex(null)}
-              className="absolute top-4 right-4 z-20 bg-black/60 rounded-full p-2 hover:bg-white/20 transition-all border border-white/20"
+              className="absolute top-4 right-4 z-30 bg-black/60 rounded-full p-2 hover:bg-white/20 transition-all border border-white/20"
               aria-label="Fermer"
             >
               <X className="text-white" size={20} />
@@ -231,14 +435,14 @@ function ExpositionMasonry({ images }: { images: { url: string; caption: string 
               <>
                 <button
                   onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
-                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/60 rounded-full p-2 sm:p-3 border border-white/20"
+                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 bg-black/60 hover:bg-black/90 rounded-full p-2.5 sm:p-3 border border-white/20 cursor-pointer"
                   aria-label="Image précédente"
                 >
                   <span className="text-white text-lg sm:text-xl font-bold">‹</span>
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); goToNext(); }}
-                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/60 rounded-full p-2 sm:p-3 border border-white/20"
+                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 bg-black/60 hover:bg-black/90 rounded-full p-2.5 sm:p-3 border border-white/20 cursor-pointer"
                   aria-label="Image suivante"
                 >
                   <span className="text-white text-lg sm:text-xl font-bold">›</span>
@@ -246,20 +450,48 @@ function ExpositionMasonry({ images }: { images: { url: string; caption: string 
               </>
             )}
             <motion.div
-              className="relative w-[95vw] h-[85vh] flex flex-col items-center justify-center"
+              className="relative max-w-[92vw] max-h-[88vh] flex flex-col items-center justify-center select-none"
               onClick={(e) => e.stopPropagation()}
-              initial={{ scale: 0.97, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.97, opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              initial={{ scale: 0.88, rotateX: 6, opacity: 0 }}
+              animate={{ scale: 1, rotateX: 0, opacity: 1 }}
+              exit={{ scale: 0.9, rotateX: -4, opacity: 0 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              style={{ perspective: 1200 }}
             >
-              <img
-                src={images[lightboxIndex].url}
-                alt={images[lightboxIndex].caption}
-                className="max-w-full max-h-[80vh] object-contain rounded-lg"
-              />
+              <motion.div
+                animate={{
+                  rotateX: lightboxTilt.rotateX,
+                  rotateY: lightboxTilt.rotateY,
+                  scale: lightboxGlare.opacity ? 1.02 : 1,
+                }}
+                transition={{ type: "spring", stiffness: 260, damping: 24, mass: 0.7 }}
+                style={{
+                  perspective: 1200,
+                  transformStyle: "preserve-3d",
+                }}
+                onMouseMove={handleLightboxMouseMove}
+                onMouseLeave={handleLightboxMouseLeave}
+                className="relative rounded-2xl overflow-hidden shadow-[0_25px_70px_rgba(0,0,0,0.95)] border border-white/10 cursor-pointer"
+              >
+                {/* Reflet dynamique de lumière */}
+                <div
+                  className="absolute inset-0 z-20 pointer-events-none transition-opacity duration-300"
+                  style={{
+                    opacity: lightboxGlare.opacity ? 0.35 : 0,
+                    background: `radial-gradient(circle 350px at ${lightboxGlare.x}% ${lightboxGlare.y}%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.06) 45%, transparent 80%)`,
+                    mixBlendMode: "overlay",
+                  }}
+                />
+
+                <img
+                  src={images[lightboxIndex].url}
+                  alt={images[lightboxIndex].caption}
+                  className="max-w-full max-h-[76vh] object-contain rounded-2xl block"
+                />
+              </motion.div>
+
               {images[lightboxIndex].caption && (
-                <p className="text-white text-center mt-4 text-lg">
+                <p className="text-white text-center mt-4 text-base sm:text-lg font-light drop-shadow-md">
                   <TranslatedText text={images[lightboxIndex].caption} />
                 </p>
               )}
