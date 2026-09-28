@@ -15,10 +15,9 @@ interface ArtworkLightboxProps {
   artwork: Artwork | null;
   isOpen: boolean;
   onClose: () => void;
-  originRect?: DOMRect | null;
 }
 
-export default function ArtworkLightbox({ artwork, isOpen, onClose, originRect }: ArtworkLightboxProps) {
+export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLightboxProps) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -129,63 +128,6 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose, originRect }
     img.src = url;
   }, [isOpen, hasMultipleImages, currentImageIndex, allImages]);
   
-  // Animation d'expansion ultra-fluide depuis la position exacte de la carte cliquée
-  const originAnimation = useMemo(() => {
-    if (!originRect || typeof window === "undefined") {
-      return {
-        initial: { scale: 0.88, opacity: 0, filter: "blur(8px)" },
-        animate: { scale: 1, x: 0, y: 0, opacity: 1, filter: "blur(0px)", transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
-        exit: { scale: 0.9, opacity: 0, filter: "blur(8px)", transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }
-      };
-    }
-
-    const screenCenterX = window.innerWidth / 2;
-    const screenCenterY = window.innerHeight / 2;
-    const rectCenterX = originRect.left + originRect.width / 2;
-    const rectCenterY = originRect.top + originRect.height / 2;
-
-    const deltaX = rectCenterX - screenCenterX;
-    const deltaY = rectCenterY - screenCenterY;
-    
-    const targetWidth = Math.min(window.innerWidth * 0.92, 1400);
-    const targetHeight = Math.min(window.innerHeight * 0.9, 900);
-    const scale = Math.max(0.18, Math.min(originRect.width / targetWidth, originRect.height / targetHeight));
-
-    return {
-      initial: {
-        x: deltaX,
-        y: deltaY,
-        scale: scale,
-        opacity: 0.85,
-        filter: "blur(4px)",
-      },
-      animate: {
-        x: 0,
-        y: 0,
-        scale: 1,
-        opacity: 1,
-        filter: "blur(0px)",
-        transition: {
-          type: "spring",
-          stiffness: 280,
-          damping: 28,
-          mass: 0.8,
-        }
-      },
-      exit: {
-        x: deltaX,
-        y: deltaY,
-        scale: scale,
-        opacity: 0,
-        filter: "blur(6px)",
-        transition: {
-          duration: 0.35,
-          ease: [0.32, 0, 0.67, 0],
-        }
-      }
-    };
-  }, [originRect]);
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -199,11 +141,12 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose, originRect }
           transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         >
           <motion.div
-            className="relative w-[96vw] h-[95vh] sm:w-[92vw] sm:h-[90vh] overflow-hidden rounded-2xl bg-[#09090b]/90 border border-white/10 will-change-transform flex flex-col justify-between shadow-[0_30px_90px_rgba(0,0,0,0.95)]"
+            className="relative w-[96vw] h-[95vh] sm:w-[92vw] sm:h-[90vh] overflow-hidden rounded-2xl bg-black/50 border border-white/10 will-change-transform flex flex-col justify-between"
             onClick={onClose}
-            initial={originAnimation.initial}
-            animate={originAnimation.animate}
-            exit={originAnimation.exit}
+            initial={{ scale: 0.88, rotateX: 6, opacity: 0, filter: "blur(8px)" }}
+            animate={{ scale: 1, rotateX: 0, opacity: 1, filter: "blur(0px)" }}
+            exit={{ scale: 0.9, rotateX: -4, opacity: 0, filter: "blur(8px)" }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
             style={{ perspective: 1200 }}
           >
             <button

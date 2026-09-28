@@ -7,8 +7,7 @@ interface GalerieRowCardProps {
   isSelected: boolean;
   isFirst: boolean;
   delayIndex: number;
-  rowDelay?: number;
-  onClick: (rect?: DOMRect) => void;
+  onClick: () => void;
 }
 
 export default function GalerieRowCard({
@@ -16,7 +15,6 @@ export default function GalerieRowCard({
   isSelected,
   isFirst,
   delayIndex,
-  rowDelay = 0.4,
   onClick,
 }: GalerieRowCardProps) {
   const cardRef = useRef<HTMLButtonElement>(null);
@@ -53,8 +51,6 @@ export default function GalerieRowCard({
     setGlare(prev => ({ ...prev, opacity: 0 }));
   };
 
-  const totalDelay = rowDelay + delayIndex * 0.09;
-
   return (
     <motion.button
       ref={cardRef}
@@ -64,26 +60,27 @@ export default function GalerieRowCard({
       style={{
         perspective: 900,
       }}
-      onClick={() => onClick(cardRef.current?.getBoundingClientRect())}
+      onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       aria-label={artwork.title}
       initial={{ 
         opacity: 0, 
-        scale: 0.94, 
-        filter: "brightness(0.2) blur(8px)" 
+        scale: 0.9, 
+        filter: "blur(4px)" 
       }}
-      animate={{ 
-        opacity: isSelected ? 1 : 0.92, 
+      whileInView={{ 
+        opacity: isSelected ? 1 : 0.88, 
         scale: 1, 
-        filter: "brightness(1) blur(0px)",
+        filter: "blur(0px)",
         transition: { 
-          duration: 0.85, 
-          ease: [0.16, 1, 0.3, 1],
-          delay: totalDelay
+          duration: 0.7, 
+          ease: [0.25, 0.46, 0.45, 0.94],
+          delay: delayIndex * 0.08
         } 
       }}
+      viewport={{ once: true, margin: "-5%" }}
     >
       <motion.div
         animate={{
@@ -110,25 +107,6 @@ export default function GalerieRowCard({
               : "border-white/10"
         } border bg-black/40`}
       >
-        {/* Halo d'allumage des spots d'exposition qui éclaire le tableau un par un */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ 
-            opacity: [0, 0.75, 0],
-            scale: [0.9, 1.25, 1],
-          }}
-          transition={{ 
-            delay: totalDelay, 
-            duration: 1.1,
-            ease: "easeOut"
-          }}
-          className="absolute inset-0 pointer-events-none rounded-xl z-30"
-          style={{
-            background: "radial-gradient(circle at 50% 15%, rgba(255, 245, 220, 0.7) 0%, rgba(255, 230, 180, 0.2) 40%, transparent 75%)",
-            mixBlendMode: "screen",
-          }}
-        />
-
         {/* Reflet dynamique de vernis / spot de lumière qui suit la souris */}
         <div
           className="absolute inset-0 z-20 pointer-events-none transition-opacity duration-200"

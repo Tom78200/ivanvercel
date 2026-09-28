@@ -26,20 +26,15 @@ export default function Gallery() {
   const textOpacity = useTransform(scrollYProgress, [0, 0.65], [1, 0]);
 
   const sliderArtworks = artworks?.filter(artwork => artwork.showInSlider) || [];
-  const [originRect, setOriginRect] = useState<DOMRect | null>(null);
 
-  const openLightbox = useCallback((artwork: Artwork, rect?: DOMRect) => {
+  const openLightbox = useCallback((artwork: Artwork) => {
     setSelectedArtwork(artwork);
-    setOriginRect(rect || null);
     setIsLightboxOpen(true);
   }, []);
 
   const closeLightbox = useCallback(() => {
     setIsLightboxOpen(false);
-    setTimeout(() => {
-      setSelectedArtwork(null);
-      setOriginRect(null);
-    }, 350);
+    setTimeout(() => setSelectedArtwork(null), 300);
   }, []);
 
   useEffect(() => {
@@ -204,14 +199,9 @@ export default function Gallery() {
           </motion.div>
         </section>
 
-        {/* Fragmentation cinématique de la grande œuvre vers la collection */}
-        <FragmentationHero 
-          artwork={sliderArtworks[0] || artworks[0]} 
-          onOpen={openLightbox} 
-        />
-
         {/* Transition et fragmentation vers la grille d'œuvres */}
-        <section className="bg-black relative py-8 sm:py-12 md:py-16">
+        <section className="bg-black relative py-12 sm:py-16 md:py-20">
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none -translate-y-16 z-10" />
           <div className="w-full max-w-[2000px] mx-auto px-3 sm:px-4 md:px-6">
             <MasonryColumns artworks={artworks} isLightboxOpen={isLightboxOpen} onOpen={openLightbox} />
           </div>
@@ -221,105 +211,15 @@ export default function Gallery() {
           artwork={selectedArtwork}
           isOpen={isLightboxOpen}
           onClose={closeLightbox}
-          originRect={originRect}
         />
       </AnimatePresence>
     </>
   );
 }
 
-function FragmentationHero({ 
-  artwork, 
-  onOpen 
-}: { 
-  artwork?: Artwork; 
-  onOpen: (artwork: Artwork, rect?: DOMRect) => void; 
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
-  });
-
-  // Écartement et inclinaison 3D des fragments au scroll
-  const spreadX = useTransform(scrollYProgress, [0.15, 0.65], [0, 42]);
-  const spreadLeft = useTransform(spreadX, (val) => -val);
-  const rotLeft = useTransform(scrollYProgress, [0.15, 0.65], [0, -8]);
-  const rotRight = useTransform(scrollYProgress, [0.15, 0.65], [0, 8]);
-  const scale = useTransform(scrollYProgress, [0.1, 0.45, 0.8], [0.94, 1, 0.96]);
-  const opacity = useTransform(scrollYProgress, [0.05, 0.25, 0.8, 0.95], [0.5, 1, 1, 0.4]);
-
-  if (!artwork) return null;
-
-  return (
-    <section ref={containerRef} className="relative py-12 sm:py-20 overflow-hidden bg-black text-center">
-      <motion.div style={{ opacity, scale }} className="max-w-5xl mx-auto px-4">
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 0.6, y: 0 }}
-          viewport={{ once: true }}
-          className="text-[11px] sm:text-xs uppercase tracking-[0.4em] text-white/70 mb-5 font-inter font-light"
-        >
-          L'œuvre s'ouvre sur la collection
-        </motion.p>
-
-        {/* Composition triptyque qui se fragmente en 3 volets physiques vers la grille */}
-        <div
-          style={{ perspective: 1200 }}
-          className="relative flex items-center justify-center gap-2 sm:gap-4 h-64 sm:h-80 md:h-[420px]"
-        >
-          {/* Fragment Gauche */}
-          <motion.div
-            style={{ x: spreadLeft, rotateY: rotLeft }}
-            className="w-1/3 h-full overflow-hidden rounded-xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.85)] relative cursor-pointer group"
-            onClick={(e) => onOpen(artwork, e.currentTarget.getBoundingClientRect())}
-            whileHover={{ scale: 1.02 }}
-          >
-            <img
-              src={artwork.imageUrl}
-              alt={artwork.title}
-              className="w-[300%] max-w-none h-full object-cover -translate-x-0 group-hover:scale-105 transition-transform duration-700"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent pointer-events-none" />
-          </motion.div>
-
-          {/* Fragment Centre */}
-          <motion.div
-            className="w-1/3 h-full overflow-hidden rounded-xl border border-white/20 shadow-[0_25px_60px_rgba(0,0,0,0.95)] relative cursor-pointer z-10 group"
-            onClick={(e) => onOpen(artwork, e.currentTarget.getBoundingClientRect())}
-            whileHover={{ scale: 1.03 }}
-          >
-            <img
-              src={artwork.imageUrl}
-              alt={artwork.title}
-              className="w-[300%] max-w-none h-full object-cover -translate-x-[33.33%] group-hover:scale-105 transition-transform duration-700"
-            />
-            <div className="absolute inset-0 bg-white/[0.04] pointer-events-none" />
-          </motion.div>
-
-          {/* Fragment Droit */}
-          <motion.div
-            style={{ x: spreadX, rotateY: rotRight }}
-            className="w-1/3 h-full overflow-hidden rounded-xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.85)] relative cursor-pointer group"
-            onClick={(e) => onOpen(artwork, e.currentTarget.getBoundingClientRect())}
-            whileHover={{ scale: 1.02 }}
-          >
-            <img
-              src={artwork.imageUrl}
-              alt={artwork.title}
-              className="w-[300%] max-w-none h-full object-cover -translate-x-[66.66%] group-hover:scale-105 transition-transform duration-700"
-            />
-            <div className="absolute inset-0 bg-gradient-to-l from-black/40 via-transparent to-transparent pointer-events-none" />
-          </motion.div>
-        </div>
-      </motion.div>
-    </section>
-  );
-}
-
 type MasonryProps = {
   artworks: Artwork[];
-  onOpen: (artwork: Artwork, rect?: DOMRect) => void;
+  onOpen: (artwork: Artwork) => void;
   isLightboxOpen: boolean;
 };
 
