@@ -21,7 +21,6 @@ export default function ArtLoader() {
     };
 
     const preventKeyScroll = (e: KeyboardEvent) => {
-      // Bloque les touches de scroll : Espace, PageDown, PageUp, Fin, Début, Flèches
       if (["Space", "ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(e.code) || [32, 33, 34, 35, 36, 37, 38, 39, 40].includes(e.keyCode)) {
         e.preventDefault();
       }
@@ -69,41 +68,53 @@ export default function ArtLoader() {
           initial={{ opacity: 1 }}
           exit={{ 
             opacity: 0,
-            transition: { duration: 0.9, ease: [0.65, 0, 0.35, 1] } 
+            transition: { duration: 0.8, ease: [0.65, 0, 0.35, 1] } 
           }}
           className="fixed inset-0 z-[10000] bg-[#070709] flex flex-col items-center justify-center pointer-events-auto select-none overflow-hidden touch-none"
         >
-          {/* 1. Texture de tableau / toile ultra-zoomée qui recule lentement */}
-          <motion.div
-            initial={{ scale: 1.55, opacity: 0 }}
-            animate={{ 
-              scale: phase === "enter" ? 1.05 : 1, 
-              opacity: phase === "enter" ? 0.35 : 0,
-              transition: { 
-                scale: { duration: 4.5, ease: [0.16, 1, 0.3, 1] },
-                opacity: { duration: phase === "enter" ? 1.4 : 0.8, ease: "easeOut" }
-              }
-            }}
-            className="absolute inset-0 bg-cover bg-center pointer-events-none filter brightness-90 contrast-125"
-            style={{
-              backgroundImage: `url('https://fzyxdcdzhppdxhoiqatz.supabase.co/storage/v1/object/public/Images/images/1784299235030-776322712.jpg')`,
-            }}
-          />
+          {/* 1. Texture de tableau accélérée 100% GPU sans filtre CSS lourd pour fluidité absolue (60/120 FPS) */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <motion.div
+              initial={{ scale: 1.35, opacity: 0 }}
+              animate={{ 
+                scale: phase === "enter" ? 1.05 : 1.0, 
+                opacity: phase === "enter" ? 0.38 : 0,
+                transition: { 
+                  scale: { duration: 4.8, ease: "easeOut" },
+                  opacity: { duration: phase === "enter" ? 1.2 : 0.7, ease: "easeOut" }
+                }
+              }}
+              style={{
+                transform: "translate3d(0,0,0)",
+                backfaceVisibility: "hidden",
+                willChange: "transform, opacity",
+              }}
+              className="w-full h-full transform-gpu"
+            >
+              <img
+                src="https://fzyxdcdzhppdxhoiqatz.supabase.co/storage/v1/object/public/Images/images/1784299235030-776322712.jpg"
+                alt="Texture de toile"
+                className="w-full h-full object-cover transform-gpu pointer-events-none select-none"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+              />
+            </motion.div>
+          </div>
 
-          {/* Vignette feutrée et grain pour une ambiance galerie nocturne */}
+          {/* Voile sombre et vignette feutrée réalisés en dégradé natif (0 coût GPU) */}
           <div 
-            className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(7,7,9,0.5)_0%,rgba(7,7,9,0.92)_70%,#070709_100%)]" 
+            className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(7,7,9,0.55)_0%,rgba(7,7,9,0.92)_70%,#070709_100%)]" 
           />
 
-          {/* Halo lumineux d'exposition au centre */}
+          {/* Halo d'ambiance galerie subtil en dégradé natif fluide */}
           <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={{ opacity: 0 }}
             animate={{ 
-              scale: phase === "enter" ? [0.8, 1.25, 1.1] : 1.4,
-              opacity: phase === "enter" ? 0.45 : 0,
-              transition: { duration: 4.2, ease: "easeInOut" }
+              opacity: phase === "enter" ? 0.35 : 0,
+              transition: { duration: 2, ease: "easeInOut" }
             }}
-            className="absolute w-[600px] h-[600px] rounded-full bg-gradient-to-r from-amber-500/10 via-white/5 to-transparent blur-3xl pointer-events-none"
+            className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,220,160,0.1)_0%,transparent_60%)]"
           />
 
           {/* Contenu central : Nom lettre par lettre & Trait de pinceau */}
@@ -111,34 +122,38 @@ export default function ArtLoader() {
             className="relative z-10 flex flex-col items-center px-4"
             animate={phase === "exit" ? { 
               opacity: 0, 
-              y: -16, 
-              filter: "blur(8px)",
-              transition: { duration: 0.7, ease: [0.4, 0, 0.2, 1] }
+              y: -14, 
+              transition: { duration: 0.6, ease: [0.4, 0, 0.2, 1] }
             } : {}}
+            style={{
+              willChange: "transform, opacity",
+            }}
           >
-            {/* Titre lettre par lettre : cadence ralentie pour savourer chaque lettre */}
+            {/* Titre lettre par lettre : cadence ralentie et transitions 100% GPU */}
             <div className="flex flex-wrap justify-center items-center mb-6 overflow-hidden">
               {nameLetters.map((char, index) => (
                 <motion.span
                   key={index}
                   initial={{ 
-                    y: 45, 
+                    y: 35, 
                     opacity: 0, 
-                    scale: 1.35,
-                    filter: "blur(14px)" 
+                    scale: 1.25,
                   }}
                   animate={{ 
                     y: 0, 
                     opacity: 1, 
                     scale: 1,
-                    filter: "blur(0px)",
                     transition: {
-                      duration: 0.95,
-                      delay: 0.25 + index * 0.11, // Ralenti délibéré pour ressentir chaque lettre
+                      duration: 0.85,
+                      delay: 0.2 + index * 0.11, // Cadence pour ressentir chaque lettre
                       ease: [0.22, 1, 0.36, 1],
                     }
                   }}
-                  className={`font-playfair text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-transparent bg-clip-text bg-gradient-to-b from-white via-white/95 to-amber-100/70 tracking-[0.3em] uppercase font-light drop-shadow-[0_2px_20px_rgba(255,255,255,0.35)] ${
+                  style={{
+                    willChange: "transform, opacity",
+                    transform: "translate3d(0,0,0)",
+                  }}
+                  className={`font-playfair text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-transparent bg-clip-text bg-gradient-to-b from-white via-white/95 to-amber-100/75 tracking-[0.3em] uppercase font-light drop-shadow-[0_2px_18px_rgba(255,255,255,0.35)] ${
                     char === " " ? "w-4 sm:w-8" : ""
                   }`}
                 >
@@ -182,7 +197,7 @@ export default function ArtLoader() {
 
             {/* Sous-titre "Artiste Peintre Contemporain" */}
             <motion.p
-              initial={{ opacity: 0, letterSpacing: "0.25em", y: 8 }}
+              initial={{ opacity: 0, letterSpacing: "0.25em", y: 6 }}
               animate={{ 
                 opacity: 0.75, 
                 letterSpacing: "0.5em", 
