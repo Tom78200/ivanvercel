@@ -1,63 +1,82 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+
+declare global {
+  interface Window {
+    __ambientAudio?: HTMLAudioElement;
+  }
+}
 
 export default function AudioPlayer() {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
   useEffect(() => {
-    // Lecteur audio natif HTML5
-    const audio = new Audio("/audio/ambient.mp3");
-    audio.loop = true;
-    audio.volume = 0.85;
-    audio.preload = "auto";
-    audioRef.current = audio;
+    if (typeof window === "undefined") return;
 
-    const tryPlay = () => {
-      if (audioRef.current) {
-        const promise = audioRef.current.play();
+    // Singleton audio global persistant
+    if (!window.__ambientAudio) {
+      const audio = new Audio("/audio/ambient.mp3");
+      audio.id = "ambient-audio";
+      audio.loop = true;
+      audio.volume = 0.85;
+      audio.preload = "auto";
+      window.__ambientAudio = audio;
+    }
+
+    const audio = window.__ambientAudio;
+
+    const playSafe = () => {
+      if (audio && audio.paused) {
+        const promise = audio.play();
         if (promise !== undefined) {
           promise.catch(() => {
-            // Autoplay restreint par la politique du navigateur avant premier geste
+            // En attente du déblocage navigateur par geste
           });
         }
       }
     };
 
-    // 1. Tenter la lecture immédiate
-    tryPlay();
+    // 1. Tenter la lecture immédiate dès le montage
+    playSafe();
 
-    // 2. Débloquer obligatoirement la lecture au moindre geste utilisateur (clic, toucher, défilement)
-    const onUserGesture = () => {
-      tryPlay();
+    // 2. Déclencheurs ultra-réactifs au moindre contact (toucher, clic, scroll, frappe, focus)
+    const gestureEvents = [
+      "click",
+      "pointerdown",
+      "touchstart",
+      "touchend",
+      "touchmove",
+      "scroll",
+      "wheel",
+      "mousemove",
+      "keydown",
+      "visibilitychange",
+      "focus"
+    ];
+
+    const handleGesture = () => {
+      playSafe();
     };
 
-    window.addEventListener("click", onUserGesture, { passive: true });
-    window.addEventListener("touchstart", onUserGesture, { passive: true });
-    window.addEventListener("pointerdown", onUserGesture, { passive: true });
-    window.addEventListener("scroll", onUserGesture, { passive: true });
-    window.addEventListener("keydown", onUserGesture, { passive: true });
+    gestureEvents.forEach((evt) => {
+      window.addEventListener(evt, handleGesture, { passive: true, capture: true });
+      document.addEventListener(evt, handleGesture, { passive: true, capture: true });
+    });
 
-    // 3. Surveillance pour garantir que l'ambiance ne s'arrête jamais
-    const keepPlayingInterval = setInterval(() => {
-      if (audioRef.current && audioRef.current.paused) {
-        tryPlay();
+    // 3. Heartbeat / boucle de surveillance permanente (toutes les 1.2s)
+    const heartbeat = setInterval(() => {
+      if (audio && audio.paused) {
+        playSafe();
       }
-    }, 2500);
+    }, 1200);
 
     return () => {
-      window.removeEventListener("click", onUserGesture);
-      window.removeEventListener("touchstart", onUserGesture);
-      window.removeEventListener("pointerdown", onUserGesture);
-      window.removeEventListener("scroll", onUserGesture);
-      window.removeEventListener("keydown", onUserGesture);
-      clearInterval(keepPlayingInterval);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = "";
-        audioRef.current = null;
-      }
+      // Ne JAMAIS détruire ni mettre en pause le flux audio global lors des changements de pages
+      clearInterval(heartbeat);
+      gestureEvents.forEach((evt) => {
+        window.removeEventListener(evt, handleGesture, true);
+        document.removeEventListener(evt, handleGesture, true);
+      });
     };
   }, []);
 
-  // Aucun élément visuel affiché : son natif permanent et obligatoire
   return null;
 }
+
