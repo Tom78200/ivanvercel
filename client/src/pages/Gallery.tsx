@@ -155,29 +155,33 @@ export default function Gallery() {
             <div className="absolute inset-0 bg-gradient-to-b from-gray-900 to-black" />
           )}
           {/* Nom centré mobile */}
-          <motion.div 
-            style={{ y: textY, opacity: textOpacity }}
-            className="md:hidden absolute top-1/2 left-1/2 z-20 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none select-none w-full px-3 sm:px-4"
-          >
-            <h1 className="text-3xl xs:text-4xl sm:text-5xl font-playfair text-white mb-2 tracking-wider uppercase">IVAN GAUTHIER</h1>
-            <p className="text-sm sm:text-base text-white opacity-80 tracking-[0.2em] uppercase mb-4">Artiste Contemporain</p>
-          </motion.div>
+          <div className="md:hidden absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center justify-center pointer-events-none select-none px-4">
+            <motion.div 
+              style={{ y: textY, opacity: textOpacity }}
+              className="text-center w-full max-w-sm mx-auto flex flex-col items-center"
+            >
+              <h1 className="text-3xl xs:text-4xl sm:text-5xl font-playfair text-white mb-2 tracking-wider uppercase drop-shadow-md">IVAN GAUTHIER</h1>
+              <p className="text-xs sm:text-sm text-white/90 tracking-[0.25em] uppercase font-light drop-shadow-sm">Artiste Contemporain</p>
+            </motion.div>
+          </div>
+
           {/* Nom centré desktop */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{ y: textY, opacity: textOpacity }}
-            transition={{ 
-              duration: 0.8,
-              delay: 0.5,
-              ease: [0.19, 1, 0.22, 1]
-            }}
-            className="hidden md:block absolute bottom-16 lg:bottom-20 left-1/2 transform -translate-x-1/2 text-center z-10"
-          >
-            <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-playfair text-white mb-4 tracking-wider">IVAN GAUTHIER</h1>
-            <p className="text-lg md:text-xl text-white opacity-80 tracking-[0.3em] uppercase">Artiste Contemporain</p>
-            <div className="flex justify-center w-full mt-8"></div>
-          </motion.div>
+          <div className="hidden md:flex absolute inset-x-0 bottom-16 lg:bottom-20 z-10 justify-center items-center pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{ y: textY, opacity: textOpacity }}
+              transition={{ 
+                duration: 0.8,
+                delay: 0.5,
+                ease: [0.19, 1, 0.22, 1]
+              }}
+              className="text-center"
+            >
+              <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-playfair text-white mb-4 tracking-wider">IVAN GAUTHIER</h1>
+              <p className="text-lg md:text-xl text-white opacity-80 tracking-[0.3em] uppercase">Artiste Contemporain</p>
+            </motion.div>
+          </div>
 
         </section>
 

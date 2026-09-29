@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import type { Exhibition } from "@shared/schema";
+import { getAdminHeaders } from "@/lib/adminAuth";
 
 export default function AdminExpoImages() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -12,7 +13,10 @@ export default function AdminExpoImages() {
 
   async function checkAuth() {
     try {
-      const res = await fetch('/api/me', { credentials: "include" });
+      const res = await fetch('/api/me', {
+        headers: getAdminHeaders(),
+        credentials: "include"
+      });
       const me = await res.json();
       if (me?.isAdmin && me?.adminUser?.username === 'ivan') {
         setIsAuthenticated(true);
@@ -69,11 +73,12 @@ export default function AdminExpoImages() {
         data.append("image", file);
         const uploadRes = await fetch("/api/upload", {
           method: "POST",
+          headers: getAdminHeaders(),
           credentials: "include",
           body: data
         });
         if (!uploadRes.ok) {
-          const err = await uploadRes.json();
+          const err = await uploadRes.json().catch(() => ({}));
           throw new Error(err.error || `Erreur lors de l'upload de l'image ${file.name}.`);
         }
         const uploadData = await uploadRes.json();
@@ -83,7 +88,7 @@ export default function AdminExpoImages() {
       const newImages = [...images, ...uploadedImages];
       const res = await fetch(`/api/exhibitions/${expoId}/gallery`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getAdminHeaders({ "Content-Type": "application/json" }),
         credentials: "include",
         body: JSON.stringify(newImages)
       });
@@ -107,7 +112,7 @@ export default function AdminExpoImages() {
     const newImages = images.filter((_, i) => i !== index);
     const res = await fetch(`/api/exhibitions/${expoId}/gallery`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: getAdminHeaders({ "Content-Type": "application/json" }),
       credentials: "include",
       body: JSON.stringify(newImages)
     });

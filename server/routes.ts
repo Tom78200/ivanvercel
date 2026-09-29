@@ -40,10 +40,51 @@ async function uploadBufferToSupabase(originalName: string, mimeType: string, bu
   return data.publicUrl;
 }
 
-// Middleware de protection admin (Ivan uniquement)
-function requireAdmin(req: Request, res: Response, next: NextFunction) {
+import crypto from "crypto";
+
+const ADMIN_JWT_SECRET = process.env.SESSION_SECRET || "Guthier2024!_SESSION_SECRET_@2024";
+
+function createAdminToken(payload: { id: number; username: string }): string {
+  const data = JSON.stringify({ ...payload, exp: Date.now() + 30 * 24 * 60 * 60 * 1000 }); // 30 jours
+  const encoded = Buffer.from(data).toString("base64url");
+  const signature = crypto.createHmac("sha256", ADMIN_JWT_SECRET).update(encoded).digest("base64url");
+  return `${encoded}.${signature}`;
+}
+
+function verifyAdminToken(token: string): { id: number; username: string } | null {
+  try {
+    const [encoded, signature] = token.split(".");
+    if (!encoded || !signature) return null;
+    const expectedSig = crypto.createHmac("sha256", ADMIN_JWT_SECRET).update(encoded).digest("base64url");
+    if (signature !== expectedSig) return null;
+    const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8"));
+    if (payload.exp && payload.exp < Date.now()) return null;
+    if (payload.username !== "ivan") return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+export function getAuthAdmin(req: Request): { id: number; username: string } | null {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.slice(7).trim();
+    const verified = verifyAdminToken(token);
+    if (verified) return verified;
+  }
   const session = req.session as any;
-  if (session?.isAdmin) {
+  if (session?.isAdmin && session?.adminUser) {
+    return session.adminUser;
+  }
+  return null;
+}
+
+// Middleware de protection admin (Ivan uniquement - vérifie Token Bearer ou Cookie Session)
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  const admin = getAuthAdmin(req);
+  if (admin) {
+    (req as any).adminUser = admin;
     return next();
   }
   res.status(401).json({ error: "Accès non autorisé" });
@@ -106,11 +147,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Identifiants incorrects" });
       }
 
-      // Set session
-      (req.session as any).isAdmin = true;
-      (req.session as any).adminUser = { id: user.id, username: user.username };
+      // Generate token
+      const token = createAdminToken({ id: user.id, username: user.username });
 
-      return res.json({ success: true, user: { id: user.id, username: user.username } });
+      // Set session cookie as well for backward compatibility
+      if (req.session) {
+        (req.session as any).isAdmin = true;
+        (req.session as any).adminUser = { id: user.id, username: user.username };
+      }
+
+      return res.json({
+        success: true,
+        token,
+        user: { id: user.id, username: user.username }
+      });
     } catch (error) {
       console.error('Login error:', error);
       res.status(500).json({ error: "Internal server error" });
@@ -119,10 +169,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get current user session
   app.get("/api/me", (req, res) => {
-    if (req.session && (req.session as any).isAdmin) {
+    const admin = getAuthAdmin(req);
+    if (admin) {
       return res.json({
         isAdmin: true,
-        adminUser: (req.session as any).adminUser
+        adminUser: admin
       });
     }
     return res.json({ isAdmin: false });

@@ -5,6 +5,7 @@ import type { Artwork } from "@shared/schema";
 import { Link, useLocation } from "wouter";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getAdminHeaders, setAdminToken, clearAdminToken } from "@/lib/adminAuth";
 
 export default function Admin() {
   const [step, setStep] = useState<"auth" | "dashboard">("auth");
@@ -34,7 +35,10 @@ export default function Admin() {
 
   async function checkAuth() {
     try {
-      const res = await fetch('/api/me', { credentials: "include" });
+      const res = await fetch('/api/me', {
+        headers: getAdminHeaders(),
+        credentials: "include"
+      });
       const me = await res.json();
       if (me?.isAdmin && me?.adminUser?.username === 'ivan') {
         setStep("dashboard");
@@ -81,11 +85,12 @@ export default function Admin() {
       data.append("image", form.imageFile);
       const uploadRes = await fetch("/api/upload", {
         method: "POST",
+        headers: getAdminHeaders(),
         credentials: "include",
         body: data
       });
       if (!uploadRes.ok) {
-        const err = await uploadRes.json();
+        const err = await uploadRes.json().catch(() => ({}));
         setAddError(err.error || "Erreur lors de l'upload de l'image.");
         setIsAdding(false);
         return;
@@ -95,7 +100,7 @@ export default function Admin() {
       const categoryNormalized = (form.category || "Autres").trim();
       const res = await fetch("/api/artworks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAdminHeaders({ "Content-Type": "application/json" }),
         credentials: "include",
         body: JSON.stringify({
           title: form.title,
@@ -108,7 +113,7 @@ export default function Admin() {
         })
       });
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         setAddError(data.error || "Erreur lors de l'ajout.");
       } else {
         setAddSuccess("Œuvre ajoutée !");
@@ -147,11 +152,12 @@ export default function Admin() {
         data.append("image", file);
         const uploadRes = await fetch("/api/upload", {
           method: "POST",
+          headers: getAdminHeaders(),
           credentials: "include",
           body: data
         });
         if (!uploadRes.ok) {
-          const err = await uploadRes.json();
+          const err = await uploadRes.json().catch(() => ({}));
           throw new Error(err.error || `Erreur lors de l'upload de l'image ${file.name}.`);
         }
         const uploadData = await uploadRes.json();
@@ -160,7 +166,7 @@ export default function Admin() {
         const cleanTitle = file.name.replace(/\.[^/.]+$/, "");
         const res = await fetch("/api/artworks", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAdminHeaders({ "Content-Type": "application/json" }),
           credentials: "include",
           body: JSON.stringify({
             title: cleanTitle,
@@ -173,7 +179,7 @@ export default function Admin() {
           })
         });
         if (!res.ok) {
-          const errData = await res.json();
+          const errData = await res.json().catch(() => ({}));
           throw new Error(errData.error || `Erreur de création de l'œuvre pour ${file.name}.`);
         }
         successCount++;
@@ -202,6 +208,7 @@ export default function Admin() {
     try {
       const response = await fetch(`/api/artworks/${artworkId}/additional-images`, {
         method: 'POST',
+        headers: getAdminHeaders(),
         credentials: 'include',
         body: formData,
       });
@@ -220,44 +227,36 @@ export default function Admin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("DEBUG: CLICK OK - Tentative de connexion..."); // FORCE VISIBLE FEEDBACK
-    console.log("Login attempt started", { username });
+    setError("");
     try {
-      alert("DEBUG: Before Fetch");
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ username, password })
       });
-      alert("DEBUG: After Fetch - Status: " + res.status);
-      console.log("Login response status:", res.status);
 
-      if (res.ok) {
-        alert("DEBUG: Login Success");
-        console.log("Login success");
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data?.success) {
+        if (data.token) {
+          setAdminToken(data.token);
+        }
         setStep("dashboard");
         setError("");
+        refetch();
       } else {
-        const text = await res.text();
-        alert("DEBUG: Login Failed - " + text.substring(0, 100));
-        console.log("Login failed body:", text);
-        try {
-          const data = JSON.parse(text);
-          setError(data.error || "Mot de passe incorrect");
-        } catch {
-          setError("Erreur serveur (réponse invalide): " + res.status);
-        }
+        setError(data?.error || "Mot de passe incorrect");
       }
     } catch (err) {
       console.error("Login network error:", err);
       setError("Erreur réseau ou connexion impossible");
-      alert("Erreur réseau : vérifiez la console pour plus de détails.");
     }
   };
 
   async function handleLogout() {
-    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    clearAdminToken();
+    await fetch("/api/logout", { method: "POST", credentials: "include" }).catch(() => {});
     setStep("auth");
     setPassword("");
   }
@@ -267,9 +266,13 @@ export default function Admin() {
     setDeletingId(id);
     setDeleteError("");
     try {
-      const res = await fetch(`/api/artworks/${id}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`/api/artworks/${id}`, {
+        method: "DELETE",
+        headers: getAdminHeaders(),
+        credentials: "include"
+      });
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         setDeleteError(data.error || "Erreur lors de la suppression.");
       } else {
         await refetch();
@@ -293,7 +296,7 @@ export default function Admin() {
   async function handleSaveOrder() {
     await fetch("/api/artworks/order", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: getAdminHeaders({ "Content-Type": "application/json" }),
       credentials: "include",
       body: JSON.stringify(artworksOrder.map(a => ({ id: a.id, order: a.order ?? 0 })))
     });

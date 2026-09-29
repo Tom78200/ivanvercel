@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import type { Exhibition } from "@shared/schema";
+import { getAdminHeaders, setAdminToken, clearAdminToken } from "@/lib/adminAuth";
 
 export default function AdminExpos() {
   const [expos, setExpos] = useState<Exhibition[]>([]);
@@ -32,7 +33,10 @@ export default function AdminExpos() {
 
   async function checkAuth() {
     try {
-      const res = await fetch('/api/me', { credentials: "include" });
+      const res = await fetch('/api/me', {
+        headers: getAdminHeaders(),
+        credentials: "include"
+      });
       const me = await res.json();
       if (me?.isAdmin && me?.adminUser?.username === 'ivan') {
         setStep("dashboard");
@@ -71,12 +75,15 @@ export default function AdminExpos() {
         credentials: "include",
         body: JSON.stringify({ username: "ivan", password })
       });
-      if (res.ok) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
+        if (data.token) {
+          setAdminToken(data.token);
+        }
         setStep("dashboard");
         setAuthError("");
       } else {
-        const data = await res.json();
-        setAuthError(data.error || "Mot de passe incorrect");
+        setAuthError(data?.error || "Mot de passe incorrect");
       }
     } catch {
       setAuthError("Erreur réseau");
@@ -84,7 +91,8 @@ export default function AdminExpos() {
   };
 
   async function handleLogout() {
-    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    clearAdminToken();
+    await fetch("/api/logout", { method: "POST", credentials: "include" }).catch(() => {});
     setStep("auth");
     setPassword("");
   }
@@ -103,11 +111,12 @@ export default function AdminExpos() {
       data.append("image", fileInputRef.current.files[0]);
       const uploadRes = await fetch("/api/upload", {
         method: "POST",
+        headers: getAdminHeaders(),
         credentials: "include",
         body: data
       });
       if (!uploadRes.ok) {
-        const err = await uploadRes.json();
+        const err = await uploadRes.json().catch(() => ({}));
         setAddError(err.error || "Erreur lors de l'upload de l'image.");
         setIsAdding(false);
         return;
@@ -116,7 +125,7 @@ export default function AdminExpos() {
       const imageUrl = uploadData.imageUrl;
       const res = await fetch("/api/exhibitions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAdminHeaders({ "Content-Type": "application/json" }),
         credentials: "include",
         body: JSON.stringify({
           ...form,
@@ -125,7 +134,7 @@ export default function AdminExpos() {
         })
       });
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         setAddError(data.error || "Erreur lors de l'ajout.");
       } else {
         const newExpo = await res.json();
@@ -155,11 +164,12 @@ export default function AdminExpos() {
         data.append("image", file);
         const uploadRes = await fetch("/api/upload", {
           method: "POST",
+          headers: getAdminHeaders(),
           credentials: "include",
           body: data
         });
         if (!uploadRes.ok) {
-          const err = await uploadRes.json();
+          const err = await uploadRes.json().catch(() => ({}));
           throw new Error(err.error || `Erreur lors de l'upload de l'image de couverture ${file.name}.`);
         }
         const uploadData = await uploadRes.json();
@@ -168,7 +178,7 @@ export default function AdminExpos() {
         const cleanTitle = file.name.replace(/\.[^/.]+$/, "");
         const res = await fetch("/api/exhibitions", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAdminHeaders({ "Content-Type": "application/json" }),
           credentials: "include",
           body: JSON.stringify({
             title: cleanTitle,
@@ -181,7 +191,7 @@ export default function AdminExpos() {
           })
         });
         if (!res.ok) {
-          const errData = await res.json();
+          const errData = await res.json().catch(() => ({}));
           throw new Error(errData.error || `Erreur de création de l'exposition pour ${file.name}.`);
         }
         successCount++;
@@ -201,7 +211,11 @@ export default function AdminExpos() {
   async function handleDeleteExpo(id: number) {
     if (!window.confirm("Supprimer cette exposition ?")) return;
     try {
-      const res = await fetch(`/api/exhibitions/${id}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`/api/exhibitions/${id}`, {
+        method: "DELETE",
+        headers: getAdminHeaders(),
+        credentials: "include"
+      });
       if (res.ok) {
         setExpos(expos => expos.filter(e => e.id !== id));
       }
@@ -219,7 +233,7 @@ export default function AdminExpos() {
     const payload = expos.map((e, i) => ({ id: e.id, order: i }));
     const res = await fetch("/api/exhibitions/order", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: getAdminHeaders({ "Content-Type": "application/json" }),
       credentials: "include",
       body: JSON.stringify(payload)
     });
