@@ -21,6 +21,8 @@ declare global {
         }): {
           playVideo: () => void;
           pauseVideo: () => void;
+          unMute: () => void;
+          setVolume: (volume: number) => void;
           destroy: () => void;
           getPlayerState: () => number;
         };
@@ -34,20 +36,18 @@ declare global {
   }
 }
 
-import { useState, useEffect, useRef } from "react";
-import { Volume2, VolumeX } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef } from "react";
 
 type YouTubePlayer = {
   playVideo: () => void;
   pauseVideo: () => void;
+  unMute?: () => void;
+  setVolume?: (volume: number) => void;
   destroy: () => void;
   getPlayerState?: () => number;
 };
 
 export default function AudioPlayer() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isReady, setIsReady] = useState(false);
   const playerRef = useRef<YouTubePlayer | null>(null);
 
   useEffect(() => {
@@ -66,6 +66,16 @@ export default function AudioPlayer() {
       document.body.appendChild(playerContainer);
     }
 
+    const startPlayback = () => {
+      if (playerRef.current) {
+        try {
+          if (playerRef.current.unMute) playerRef.current.unMute();
+          if (playerRef.current.setVolume) playerRef.current.setVolume(100);
+          playerRef.current.playVideo();
+        } catch {}
+      }
+    };
+
     const initPlayer = () => {
       if (!window.YT || !window.YT.Player) return;
       if (playerRef.current) return;
@@ -83,17 +93,16 @@ export default function AudioPlayer() {
         },
         events: {
           onReady: (event: any) => {
-            setIsReady(true);
             try {
+              if (event.target.unMute) event.target.unMute();
+              if (event.target.setVolume) event.target.setVolume(100);
               event.target.playVideo();
             } catch {}
           },
-          onStateChange: (event: { data: number }) => {
-            // YouTube: 1 = PLAYING, 2 = PAUSED, 0 = ENDED
-            if (event.data === 1) {
-              setIsPlaying(true);
-            } else if (event.data === 2 || event.data === 0) {
-              setIsPlaying(false);
+          onStateChange: (event: any) => {
+            // Si la vidéo s'arrête ou se met en pause, forcer la reprise immédiate (lecture obligatoire en boucle)
+            if (event?.data === 2 || event?.data === 0) {
+              startPlayback();
             }
           }
         }
@@ -118,21 +127,23 @@ export default function AudioPlayer() {
       initPlayer();
     }
 
-    // 3. Débloquer la lecture audio au premier clic ou toucher de l'utilisateur (politique autoplay navigateurs)
-    const handleFirstUserInteraction = () => {
-      if (playerRef.current) {
-        try {
-          playerRef.current.playVideo();
-        } catch {}
-      }
-    };
+    // 3. Débloquer la lecture audio au premier geste utilisateur (requis par les politiques autoplay des navigateurs)
+    window.addEventListener('click', startPlayback);
+    window.addEventListener('touchstart', startPlayback);
+    window.addEventListener('pointerdown', startPlayback);
+    window.addEventListener('keydown', startPlayback);
 
-    window.addEventListener('click', handleFirstUserInteraction, { once: true });
-    window.addEventListener('touchstart', handleFirstUserInteraction, { once: true });
+    // Vérification de sécurité pour maintenir la lecture active en permanence
+    const keepAliveTimer = setInterval(() => {
+      startPlayback();
+    }, 4000);
 
     return () => {
-      window.removeEventListener('click', handleFirstUserInteraction);
-      window.removeEventListener('touchstart', handleFirstUserInteraction);
+      window.removeEventListener('click', startPlayback);
+      window.removeEventListener('touchstart', startPlayback);
+      window.removeEventListener('pointerdown', startPlayback);
+      window.removeEventListener('keydown', startPlayback);
+      clearInterval(keepAliveTimer);
       if (playerRef.current) {
         try {
           playerRef.current.destroy();
@@ -142,69 +153,6 @@ export default function AudioPlayer() {
     };
   }, []);
 
-  const togglePlay = () => {
-    if (!playerRef.current) return;
-    try {
-      if (isPlaying) {
-        playerRef.current.pauseVideo();
-        setIsPlaying(false);
-      } else {
-        playerRef.current.playVideo();
-        setIsPlaying(true);
-      }
-    } catch (e) {
-      console.error("Audio toggle failed:", e);
-    }
-  };
-
-  return (
-    <div className="fixed bottom-6 right-6 z-40">
-      <motion.button
-        onClick={togglePlay}
-        className="relative group flex items-center justify-center w-12 h-12 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-white shadow-[0_10px_25px_rgba(0,0,0,0.6)] hover:bg-black/90 hover:border-white/40 hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none"
-        whileTap={{ scale: 0.92 }}
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 1 }}
-        title={isPlaying ? "Désactiver la musique d'ambiance" : "Activer la musique d'ambiance"}
-        aria-label={isPlaying ? "Désactiver la musique d'ambiance" : "Activer la musique d'ambiance"}
-      >
-        {/* Anneau pulsant subtil en lecture */}
-        {isPlaying && (
-          <span className="absolute inset-0 rounded-full border border-white/30 animate-ping pointer-events-none opacity-40" />
-        )}
-
-        <AnimatePresence mode="wait">
-          {isPlaying ? (
-            <motion.div
-              key="playing"
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.7, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex items-center justify-center text-white"
-            >
-              <Volume2 className="w-5 h-5 text-white/90" />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="muted"
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.7, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex items-center justify-center text-white/60 group-hover:text-white"
-            >
-              <VolumeX className="w-5 h-5" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Info-bulle discrète au survol */}
-        <span className="hidden sm:block absolute right-full mr-3 px-2.5 py-1 rounded bg-black/85 backdrop-blur-md text-[11px] uppercase tracking-wider text-white/80 whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 border border-white/10 shadow-lg">
-          {isPlaying ? "Ambiance sonore : Active" : "Ambiance sonore : Coupée"}
-        </span>
-      </motion.button>
-    </div>
-  );
+  // Aucun bouton ni contrôle UI : la musique joue obligatoirement en continu en arrière-plan
+  return null;
 }
