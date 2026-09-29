@@ -166,22 +166,21 @@ export default function Gallery() {
           </div>
 
           {/* Nom centré desktop */}
-          <div className="hidden md:flex absolute inset-x-0 bottom-16 lg:bottom-20 z-10 justify-center items-center pointer-events-none">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{ y: textY, opacity: textOpacity }}
-              transition={{ 
-                duration: 0.8,
-                delay: 0.5,
-                ease: [0.19, 1, 0.22, 1]
-              }}
-              className="text-center"
-            >
-              <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-playfair text-white mb-4 tracking-wider">IVAN GAUTHIER</h1>
-              <p className="text-lg md:text-xl text-white opacity-80 tracking-[0.3em] uppercase">Artiste Contemporain</p>
-            </motion.div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ y: textY, opacity: textOpacity }}
+            transition={{ 
+              duration: 0.8,
+              delay: 0.5,
+              ease: [0.19, 1, 0.22, 1]
+            }}
+            className="hidden md:block absolute bottom-16 lg:bottom-20 left-1/2 transform -translate-x-1/2 text-center z-10"
+          >
+            <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-playfair text-white mb-4 tracking-wider">IVAN GAUTHIER</h1>
+            <p className="text-lg md:text-xl text-white opacity-80 tracking-[0.3em] uppercase">Artiste Contemporain</p>
+            <div className="flex justify-center w-full mt-8"></div>
+          </motion.div>
 
         </section>
 
