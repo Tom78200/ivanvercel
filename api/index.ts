@@ -32,6 +32,7 @@ app.use(helmet({
       imgSrc: ["'self'", "data:", "https://*.supabase.co", "https://images.unsplash.com", "https://images.pexels.com"],
       frameSrc: ["'self'", "https://www.youtube.com"],
       connectSrc: ["'self'"],
+      mediaSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],

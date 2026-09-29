@@ -62,6 +62,7 @@ if (app.get("env") === "development") {
         ],
         frameSrc: ["'self'", "https://www.youtube.com"],
         connectSrc: ["'self'"],
+        mediaSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         objectSrc: ["'none'"],

@@ -1,158 +1,63 @@
-declare global {
-  interface Window {
-    onYouTubeIframeAPIReady?: () => void;
-    YT: {
-      Player: {
-        new (elementId: string, config: {
-          height: string | number;
-          width: string | number;
-          videoId: string;
-          playerVars?: {
-            autoplay?: number;
-            controls?: number;
-            loop?: number;
-            playlist?: string;
-            playsinline?: number;
-          };
-          events?: {
-            onReady?: (event: any) => void;
-            onStateChange?: (event: { data: number }) => void;
-          };
-        }): {
-          playVideo: () => void;
-          pauseVideo: () => void;
-          unMute: () => void;
-          setVolume: (volume: number) => void;
-          destroy: () => void;
-          getPlayerState: () => number;
-        };
-      };
-      PlayerState: {
-        PLAYING: number;
-        PAUSED: number;
-        ENDED: number;
-      };
-    };
-  }
-}
-
 import { useEffect, useRef } from "react";
 
-type YouTubePlayer = {
-  playVideo: () => void;
-  pauseVideo: () => void;
-  unMute?: () => void;
-  setVolume?: (volume: number) => void;
-  destroy: () => void;
-  getPlayerState?: () => number;
-};
-
 export default function AudioPlayer() {
-  const playerRef = useRef<YouTubePlayer | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // 1. Créer le conteneur DOM invisible pour l'iframe YouTube
-    let playerContainer = document.getElementById('youtube-player');
-    if (!playerContainer) {
-      playerContainer = document.createElement('div');
-      playerContainer.id = 'youtube-player';
-      playerContainer.style.position = 'fixed';
-      playerContainer.style.left = '-9999px';
-      playerContainer.style.top = '-9999px';
-      playerContainer.style.width = '1px';
-      playerContainer.style.height = '1px';
-      playerContainer.style.opacity = '0';
-      playerContainer.style.pointerEvents = 'none';
-      document.body.appendChild(playerContainer);
-    }
+    // Lecteur audio natif HTML5
+    const audio = new Audio("/audio/ambient.mp3");
+    audio.loop = true;
+    audio.volume = 0.85;
+    audio.preload = "auto";
+    audioRef.current = audio;
 
-    const startPlayback = () => {
-      if (playerRef.current) {
-        try {
-          if (playerRef.current.unMute) playerRef.current.unMute();
-          if (playerRef.current.setVolume) playerRef.current.setVolume(100);
-          playerRef.current.playVideo();
-        } catch {}
-      }
-    };
-
-    const initPlayer = () => {
-      if (!window.YT || !window.YT.Player) return;
-      if (playerRef.current) return;
-
-      const player = new window.YT.Player('youtube-player', {
-        height: '1',
-        width: '1',
-        videoId: 'YRu6NK19VkQ',
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          loop: 1,
-          playlist: 'YRu6NK19VkQ',
-          playsinline: 1,
-        },
-        events: {
-          onReady: (event: any) => {
-            try {
-              if (event.target.unMute) event.target.unMute();
-              if (event.target.setVolume) event.target.setVolume(100);
-              event.target.playVideo();
-            } catch {}
-          },
-          onStateChange: (event: any) => {
-            // Si la vidéo s'arrête ou se met en pause, forcer la reprise immédiate (lecture obligatoire en boucle)
-            if (event?.data === 2 || event?.data === 0) {
-              startPlayback();
-            }
-          }
+    const tryPlay = () => {
+      if (audioRef.current) {
+        const promise = audioRef.current.play();
+        if (promise !== undefined) {
+          promise.catch(() => {
+            // Autoplay restreint par la politique du navigateur avant premier geste
+          });
         }
-      });
-
-      playerRef.current = player;
+      }
     };
 
-    // 2. Charger le script iframe_api si pas déjà présent
-    if (!window.YT) {
-      const existingScript = document.querySelector('script[src*="youtube.com/iframe_api"]');
-      if (!existingScript) {
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+    // 1. Tenter la lecture immédiate
+    tryPlay();
+
+    // 2. Débloquer obligatoirement la lecture au moindre geste utilisateur (clic, toucher, défilement)
+    const onUserGesture = () => {
+      tryPlay();
+    };
+
+    window.addEventListener("click", onUserGesture, { passive: true });
+    window.addEventListener("touchstart", onUserGesture, { passive: true });
+    window.addEventListener("pointerdown", onUserGesture, { passive: true });
+    window.addEventListener("scroll", onUserGesture, { passive: true });
+    window.addEventListener("keydown", onUserGesture, { passive: true });
+
+    // 3. Surveillance pour garantir que l'ambiance ne s'arrête jamais
+    const keepPlayingInterval = setInterval(() => {
+      if (audioRef.current && audioRef.current.paused) {
+        tryPlay();
       }
-      window.onYouTubeIframeAPIReady = () => {
-        initPlayer();
-      };
-    } else {
-      initPlayer();
-    }
-
-    // 3. Débloquer la lecture audio au premier geste utilisateur (requis par les politiques autoplay des navigateurs)
-    window.addEventListener('click', startPlayback);
-    window.addEventListener('touchstart', startPlayback);
-    window.addEventListener('pointerdown', startPlayback);
-    window.addEventListener('keydown', startPlayback);
-
-    // Vérification de sécurité pour maintenir la lecture active en permanence
-    const keepAliveTimer = setInterval(() => {
-      startPlayback();
-    }, 4000);
+    }, 2500);
 
     return () => {
-      window.removeEventListener('click', startPlayback);
-      window.removeEventListener('touchstart', startPlayback);
-      window.removeEventListener('pointerdown', startPlayback);
-      window.removeEventListener('keydown', startPlayback);
-      clearInterval(keepAliveTimer);
-      if (playerRef.current) {
-        try {
-          playerRef.current.destroy();
-        } catch {}
-        playerRef.current = null;
+      window.removeEventListener("click", onUserGesture);
+      window.removeEventListener("touchstart", onUserGesture);
+      window.removeEventListener("pointerdown", onUserGesture);
+      window.removeEventListener("scroll", onUserGesture);
+      window.removeEventListener("keydown", onUserGesture);
+      clearInterval(keepPlayingInterval);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+        audioRef.current = null;
       }
     };
   }, []);
 
-  // Aucun bouton ni contrôle UI : la musique joue obligatoirement en continu en arrière-plan
+  // Aucun élément visuel affiché : son natif permanent et obligatoire
   return null;
 }
