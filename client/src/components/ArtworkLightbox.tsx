@@ -241,15 +241,15 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
             </div>
             
             {/* Panneau d'informations en bas */}
-            <div className="bg-gradient-to-t from-black via-black/90 to-transparent p-4 sm:p-6 md:p-8 shrink-0">
+            <div className="bg-gradient-to-t from-black via-black/95 to-black/40 p-3 sm:p-5 md:p-6 shrink-0 border-t border-white/10 backdrop-blur-sm z-30">
               {/* Indicateurs de vignettes pour œuvres multi-vues */}
               {hasMultipleImages && (
-                <div className="flex justify-center gap-2 mb-3" onClick={(e) => e.stopPropagation()}>
+                <div className="flex justify-center gap-2 mb-2 sm:mb-3" onClick={(e) => e.stopPropagation()}>
                   {allImages.map((_, index) => (
                     <motion.button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-all ${
+                      className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-all ${
                         index === currentImageIndex ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/60'
                       }`}
                       aria-label={`Aller à l'image ${index + 1}`}
@@ -258,22 +258,24 @@ export default function ArtworkLightbox({ artwork, isOpen, onClose }: ArtworkLig
                 </div>
               )}
               
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-0">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-6">
                 {artwork && (
                   <>
-                    <div className="text-white">
-                      <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-playfair mb-1 sm:mb-2 will-change-transform">
+                    <div className="text-white shrink-0 max-w-full md:max-w-[45%]">
+                      <h3 className="text-base sm:text-xl md:text-2xl font-playfair mb-0.5 sm:mb-1 will-change-transform">
                         <TranslatedText text={artwork.title} />
                       </h3>
                       {[artwork.technique, artwork.dimensions, artwork.year].filter(hasDetailValue).length > 0 && (
-                        <p className="text-sm sm:text-base md:text-lg opacity-80 will-change-transform">
+                        <p className="text-xs sm:text-sm md:text-base text-white/75 will-change-transform">
                           <TranslatedText text={[artwork.technique, artwork.dimensions, artwork.year].filter(hasDetailValue).join(' • ')} />
                         </p>
                       )}
                     </div>
                     {hasDetailValue(artwork.description) && (
-                      <div className="text-right text-sm sm:text-base max-w-md hidden md:block opacity-70 will-change-transform">
-                        <p className="line-clamp-2"><TranslatedText text={artwork.description || ''} /></p>
+                      <div className="text-left md:text-right text-xs sm:text-sm text-white/85 md:max-w-xl max-h-24 sm:max-h-28 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 will-change-transform leading-relaxed font-light">
+                        <p className="whitespace-normal break-words">
+                          <TranslatedText text={artwork.description || ''} />
+                        </p>
                       </div>
                     )}
                   </>
