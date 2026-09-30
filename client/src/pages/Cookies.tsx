@@ -6,7 +6,7 @@ export default function Cookies() {
       <Helmet>
         <title>Politique de cookies | Ivan Gauthier</title>
         <meta name="description" content="Politique de cookies du site d'Ivan Gauthier." />
-        <link rel="canonical" href="https://www.ivangauthier.com/cookies" />
+        <link rel="canonical" href="https://www.ivangauthier.fr/cookies" />
       </Helmet>
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-playfair mb-6">Politique de cookies</h1>

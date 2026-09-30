@@ -6,7 +6,7 @@ export default function Conditions() {
       <Helmet>
         <title>Conditions d’utilisation | Ivan Gauthier</title>
         <meta name="description" content="Conditions d’utilisation du site d'Ivan Gauthier." />
-        <link rel="canonical" href="https://www.ivangauthier.com/conditions" />
+        <link rel="canonical" href="https://www.ivangauthier.fr/conditions" />
       </Helmet>
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-playfair mb-6">Conditions d’utilisation</h1>

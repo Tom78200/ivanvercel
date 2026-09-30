@@ -19,11 +19,11 @@ export default function Layout({ children }: LayoutProps) {
         <meta name="keywords" content="Ivan Gauthier, artiste peintre, peinture contemporaine, art contemporain, exposition, galerie, œuvres, peintre Paris" />
         <meta name="author" content="Ivan Gauthier" />
         <meta name="robots" content="index,follow" />
-        <link rel="canonical" href="https://www.ivangauthier.com/" />
+        <link rel="canonical" href="https://www.ivangauthier.fr/" />
         <meta property="og:title" content="Ivan Gauthier — Artiste Peintre Contemporain" />
         <meta property="og:description" content="Galerie d'œuvres, expositions et contact d'Ivan Gauthier, artiste peintre contemporain." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.ivangauthier.com/" />
+        <meta property="og:url" content="https://www.ivangauthier.fr/" />
         <meta property="og:image" content="/generated-icon.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Ivan Gauthier — Artiste Peintre Contemporain" />
@@ -35,8 +35,8 @@ export default function Layout({ children }: LayoutProps) {
           "@type": "Person",
           "name": "Ivan Gauthier",
           "jobTitle": "Artiste Peintre Contemporain",
-          "url": "https://www.ivangauthier.com/",
-          "image": "https://www.ivangauthier.com/generated-icon.png",
+          "url": "https://www.ivangauthier.fr/",
+          "image": "https://www.ivangauthier.fr/generated-icon.png",
           "description": "Artiste peintre contemporain expressionniste et figuratif. Expositions en France et sur tous les continents depuis l'âge de 16 ans.",
           "nationality": "Français",
           "knowsAbout": ["Peinture contemporaine", "Art expressionniste", "Art figuratif", "Expositions d'art"],

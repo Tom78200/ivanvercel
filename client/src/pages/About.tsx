@@ -87,24 +87,24 @@ export default function About() {
       <Helmet>
         <title>À propos — Ivan Gauthier, Artiste Peintre Contemporain</title>
         <meta name="description" content="Biographie d'Ivan Gauthier, artiste peintre contemporain. Parcours, esthétique, expositions et univers artistique." />
-        <link rel="canonical" href="https://www.ivangauthier.com/about" />
+        <link rel="canonical" href="https://www.ivangauthier.fr/about" />
         <meta name="keywords" content="Ivan Gauthier, biographie, artiste peintre, parcours, expositions, art, peinture contemporaine, expressionniste" />
         <meta property="og:title" content="À propos — Ivan Gauthier, Artiste Peintre Contemporain" />
         <meta property="og:description" content="Découvrez le parcours d'Ivan Gauthier, artiste peintre contemporain. Biographie, esthétique et univers artistique." />
         <meta property="og:type" content="profile" />
-        <meta property="og:url" content="https://www.ivangauthier.com/about" />
-        <meta property="og:image" content="https://www.ivangauthier.com/generated-icon.png" />
+        <meta property="og:url" content="https://www.ivangauthier.fr/about" />
+        <meta property="og:image" content="https://www.ivangauthier.fr/generated-icon.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="À propos — Ivan Gauthier" />
         <meta name="twitter:description" content="Biographie d'Ivan Gauthier, artiste peintre contemporain." />
-        <meta name="twitter:image" content="https://www.ivangauthier.com/generated-icon.png" />
+        <meta name="twitter:image" content="https://www.ivangauthier.fr/generated-icon.png" />
         <script type="application/ld+json">{`
           {
             "@context": "https://schema.org",
             "@type": "ProfilePage",
             "name": "À propos d'Ivan Gauthier",
             "description": "Biographie d'Ivan Gauthier, artiste peintre contemporain. Parcours, esthétique, expositions et univers artistique.",
-            "url": "https://www.ivangauthier.com/about",
+            "url": "https://www.ivangauthier.fr/about",
             "mainEntity": {
               "@type": "Person",
               "name": "Ivan Gauthier",
@@ -118,13 +118,13 @@ export default function About() {
                   "@type": "ListItem",
                   "position": 1,
                   "name": "Accueil",
-                  "item": "https://www.ivangauthier.com/"
+                  "item": "https://www.ivangauthier.fr/"
                 },
                 {
                   "@type": "ListItem",
                   "position": 2,
                   "name": "À propos",
-                  "item": "https://www.ivangauthier.com/about"
+                  "item": "https://www.ivangauthier.fr/about"
                 }
               ]
             }

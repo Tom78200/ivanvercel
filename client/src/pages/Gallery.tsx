@@ -79,24 +79,24 @@ export default function Gallery() {
       <Helmet>
         <title>Galerie d'œuvres — Ivan Gauthier, Artiste Peintre Contemporain</title>
         <meta name="description" content="Galerie d'œuvres d'Ivan Gauthier, artiste peintre contemporain. Peinture figurative et expressionniste, expositions, techniques, années." />
-        <link rel="canonical" href="https://www.ivangauthier.com/" />
+        <link rel="canonical" href="https://www.ivangauthier.fr/" />
         <meta name="keywords" content="Ivan Gauthier, galerie, œuvres, peintre, peinture contemporaine, art contemporain, Paris, exposition, artiste" />
         <meta property="og:title" content="Galerie d'œuvres — Ivan Gauthier, Artiste Peintre Contemporain" />
         <meta property="og:description" content="Découvrez la galerie d'œuvres d'Ivan Gauthier, artiste peintre contemporain. Peinture figurative et expressionniste." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.ivangauthier.com/" />
-        <meta property="og:image" content="https://www.ivangauthier.com/generated-icon.png" />
+        <meta property="og:url" content="https://www.ivangauthier.fr/" />
+        <meta property="og:image" content="https://www.ivangauthier.fr/generated-icon.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Galerie d'œuvres — Ivan Gauthier" />
         <meta name="twitter:description" content="Galerie d'œuvres d'Ivan Gauthier, artiste peintre contemporain." />
-        <meta name="twitter:image" content="https://www.ivangauthier.com/generated-icon.png" />
+        <meta name="twitter:image" content="https://www.ivangauthier.fr/generated-icon.png" />
         <script type="application/ld+json">{`
           {
             "@context": "https://schema.org",
             "@type": "CollectionPage",
             "name": "Galerie d'œuvres d'Ivan Gauthier",
             "description": "Galerie d'œuvres d'Ivan Gauthier, artiste peintre contemporain. Peinture figurative et expressionniste.",
-            "url": "https://www.ivangauthier.com/",
+            "url": "https://www.ivangauthier.fr/",
             "mainEntity": {
               "@type": "Person",
               "name": "Ivan Gauthier",
@@ -109,13 +109,13 @@ export default function Gallery() {
                   "@type": "ListItem",
                   "position": 1,
                   "name": "Accueil",
-                  "item": "https://www.ivangauthier.com/"
+                  "item": "https://www.ivangauthier.fr/"
                 },
                 {
                   "@type": "ListItem",
                   "position": 2,
                   "name": "Galerie",
-                  "item": "https://www.ivangauthier.com/"
+                  "item": "https://www.ivangauthier.fr/"
                 }
               ]
             }

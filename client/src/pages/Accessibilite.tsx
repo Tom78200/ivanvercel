@@ -6,7 +6,7 @@ export default function Accessibilite() {
       <Helmet>
         <title>Accessibilité | Ivan Gauthier</title>
         <meta name="description" content="Déclaration d’accessibilité du site d'Ivan Gauthier." />
-        <link rel="canonical" href="https://www.ivangauthier.com/accessibilite" />
+        <link rel="canonical" href="https://www.ivangauthier.fr/accessibilite" />
       </Helmet>
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-playfair mb-6">Déclaration d’accessibilité</h1>

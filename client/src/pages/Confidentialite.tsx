@@ -6,7 +6,7 @@ export default function Confidentialite() {
       <Helmet>
         <title>Politique de confidentialité | Ivan Gauthier</title>
         <meta name="description" content="Politique de confidentialité (RGPD) du site d'Ivan Gauthier." />
-        <link rel="canonical" href="https://www.ivangauthier.com/confidentialite" />
+        <link rel="canonical" href="https://www.ivangauthier.fr/confidentialite" />
       </Helmet>
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-playfair mb-6">Politique de confidentialité</h1>

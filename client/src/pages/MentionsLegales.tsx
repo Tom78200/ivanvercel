@@ -6,7 +6,7 @@ export default function MentionsLegales() {
       <Helmet>
         <title>Mentions légales | Ivan Gauthier</title>
         <meta name="description" content="Mentions légales du site d'Ivan Gauthier." />
-        <link rel="canonical" href="https://www.ivangauthier.com/mentions-legales" />
+        <link rel="canonical" href="https://www.ivangauthier.fr/mentions-legales" />
       </Helmet>
 
       <div className="max-w-3xl mx-auto">
