@@ -10,7 +10,6 @@ export default function AudioPlayer() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Singleton audio global persistant
     if (!window.__ambientAudio) {
       const audio = new Audio("/audio/ambient.mp3");
       audio.id = "ambient-audio";
@@ -22,61 +21,77 @@ export default function AudioPlayer() {
 
     const audio = window.__ambientAudio;
 
-    const playSafe = () => {
-      if (audio && audio.paused) {
-        const promise = audio.play();
-        if (promise !== undefined) {
-          promise.catch(() => {
-            // En attente du déblocage navigateur par geste
+    const startAudio = () => {
+      if (!audio) return;
+      const promise = audio.play();
+      if (promise !== undefined) {
+        promise
+          .then(() => {
+            audio.muted = false;
+            audio.volume = 0.85;
+          })
+          .catch(() => {
+            // Lecture immédiate en mode muet pour charger le flux en continu
+            audio.muted = true;
+            audio.play().catch(() => {});
           });
-        }
       }
     };
 
-    // 1. Tenter la lecture immédiate dès le montage
-    playSafe();
+    const unmuteAndPlay = () => {
+      if (!audio) return;
+      audio.muted = false;
+      audio.volume = 0.85;
+      if (audio.paused) {
+        audio.play().catch(() => {});
+      }
+    };
 
-    // 2. Déclencheurs ultra-réactifs au moindre contact (toucher, clic, scroll, frappe, focus)
+    // 1. Tenter la lecture immédiate dès le chargement
+    startAudio();
+
+    // 2. Écouteurs ultra-sensibles (mouvement de souris, défilement, toucher, frappe, etc.)
     const gestureEvents = [
-      "click",
-      "pointerdown",
+      "mousemove",
+      "pointermove",
+      "scroll",
+      "wheel",
       "touchstart",
       "touchend",
       "touchmove",
-      "scroll",
-      "wheel",
-      "mousemove",
+      "click",
+      "mousedown",
       "keydown",
+      "focus",
+      "mouseenter",
       "visibilitychange",
-      "focus"
+      "pageshow"
     ];
 
-    const handleGesture = () => {
-      playSafe();
-    };
-
     gestureEvents.forEach((evt) => {
-      window.addEventListener(evt, handleGesture, { passive: true, capture: true });
-      document.addEventListener(evt, handleGesture, { passive: true, capture: true });
+      window.addEventListener(evt, unmuteAndPlay, { passive: true, capture: true });
+      document.addEventListener(evt, unmuteAndPlay, { passive: true, capture: true });
     });
 
-    // 3. Heartbeat / boucle de surveillance permanente (toutes les 1.2s)
+    // 3. Boucle de maintien automatique (toutes les secondes)
     const heartbeat = setInterval(() => {
-      if (audio && audio.paused) {
-        playSafe();
+      if (audio) {
+        if (audio.paused) {
+          unmuteAndPlay();
+        }
       }
     }, 1200);
 
     return () => {
-      // Ne JAMAIS détruire ni mettre en pause le flux audio global lors des changements de pages
       clearInterval(heartbeat);
       gestureEvents.forEach((evt) => {
-        window.removeEventListener(evt, handleGesture, true);
-        document.removeEventListener(evt, handleGesture, true);
+        window.removeEventListener(evt, unmuteAndPlay, true);
+        document.removeEventListener(evt, unmuteAndPlay, true);
       });
     };
   }, []);
 
   return null;
 }
+
 
